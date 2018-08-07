@@ -1,0 +1,12 @@
+# OS X
+.
+..
+.DS_Store
+
+# All compiled code files
+*.pyc
+
+
+# My configurations
+images/*
+test/*
