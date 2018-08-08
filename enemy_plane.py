@@ -2,40 +2,35 @@
 '''
 
 
-import pygame
-from random import randint
+from flying_object import FlyingExplosiveObject
 
 
-class EnemyPlane(pygame.sprite.Sprite):
+class EnemyPlane(FlyingExplosiveObject):
     '''
     '''
 
-    def _reset(self):
-        self.rect.left = randint(0, self._background_width - self.rect.width)
-        self.rect.top = randint(-5 * self.rect.height, -self.rect.height)
-
-    def __init__(self, image, background_size):
+    def __init__(self, background_size, image, explosion_images, size=None):
         ''' Initialize an enemy plane.
         '''
 
-        super().__init__()
-        self.image = pygame.image.load(image).convert_alpha()  # Load image.
-        self.rect = self.image.get_rect()  # Get 'Rect' object (position).
-        self._background_width, self._background_height = background_size[0], background_size[1]
+        super().__init__(background_size, image, explosion_images, size)
         self.speed = 5
 
-        # Initialize position.
-        self._reset()
+        self._reset_location()
 
-    def move(self):
-        if self.rect.top < self._background_height:
-            self.rect.top += self.speed
+    def update(self):
+        if not self._killed:
+            # If alive...
+            if self.rect.top < self._background_height:
+                self.rect.top += self.speed
+            else:
+                self._reset_location()
+            self._trace_current_location_before_explosion()
         else:
-            self._reset()
+            self._explode()
 
 
 class FirstTierEnemyPlane(EnemyPlane):
 
-    def __init__(self, image_url, background_size):
-        super().__init__(image_url, background_size)
-        self.speed = 6
+    def __init__(self, background_size, image, explosion_images, size=None):
+        super().__init__(background_size, image, explosion_images, size)
