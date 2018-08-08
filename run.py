@@ -28,6 +28,10 @@ pygame.display.set_caption('Plane War Demo')
 clock = pygame.time.Clock()
 # FPS.
 FPS = 45
+# Blood.
+PLAYER_BLOOD = 5
+FIRST_TIER_ENEMY_BLOOD = 2
+
 # Converted images/surfaces
 IMAGES = {
     'background': pygame.image.load('images/backgrounds/darkpurple.png').convert_alpha(),
@@ -67,6 +71,7 @@ player = PlayerPlane(BACKGROUND_SIZE,
                      IMAGES['explosions']['default'],
                      IMAGES['lasers'],
                      [all_sprites_gp, lasers_gp],
+                     PLAYER_BLOOD,
                      PLAYER_SIZE)
 all_sprites_gp.add(player)
 player_gp.add(player)
@@ -75,6 +80,7 @@ for i in range(5):
     first_tier_enemy = FirstTierEnemyPlane(BACKGROUND_SIZE,
                                            IMAGES['enemies']['default'],
                                            IMAGES['explosions']['default'],
+                                           FIRST_TIER_ENEMY_BLOOD,
                                            FIRST_TIER_ENEMY_SIZE)
     first_tier_enemy_gp.add(first_tier_enemy)
     explosive_gp.add(first_tier_enemy)
@@ -105,8 +111,9 @@ def main():
 
         # Check collision between laser and enemies...
         for e in first_tier_enemy_gp:
-            if pygame.sprite.spritecollide(e, lasers_gp, True):
-                e.set_killed()
+            hitted_lasers = pygame.sprite.spritecollide(e, lasers_gp, True)
+            total_damage = sum(hit.get_damage_value() for hit in hitted_lasers)
+            e.lose_blood(total_damage)
 
         all_sprites_gp.update()
         all_sprites_gp.draw(screen)

@@ -26,7 +26,6 @@ class FlyingObject(pygame.sprite.Sprite):
 
         # Attributes may/shall be overwritten for each flying object.
         self._speed = 5
-        self.hit_tolerance = 10
 
     def is_killed(self):
         return self._killed
@@ -48,6 +47,7 @@ class FlyingExplosiveObject(FlyingObject):
     def _reset_after_explosion(self):
         self._killed = False
         self.image = self._origin_image
+        self._blood = self._origin_blood
         self._reset_location()
 
     def _trace_current_location_before_explosion(self):
@@ -72,12 +72,15 @@ class FlyingExplosiveObject(FlyingObject):
         else:
             self._explosion_counter = 0
 
-    def __init__(self, background_size, image, explosion_images, size=None):
+    def __init__(self, background_size, image, explosion_images, blood, size=None):
         super().__init__(background_size, image, size)
         self._explosions = explosion_images
         self._explosion_counter = 0
         self._curr_rect_left = self.rect.left
         self._curr_rect_top = self.rect.top
+
+        self._blood = blood
+        self._origin_blood = self._blood
 
     def restore_location_before_explosion(self):
         ''' Restore self.rect's location to when the object is alive.
