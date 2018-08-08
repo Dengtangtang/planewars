@@ -13,13 +13,14 @@ from my_group import ExplosionGroup
 # Initialize all modules.
 pygame.init()
 
-# Background/screen size.
-BACKGROUND_SIZE = WIDTH, HEIGHT = 600, 800
+# Screen size.
+SCREEN_SIZE = WIDTH, HEIGHT = 600, 800
+BACKGROUND_SIZE = BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 800
 PLAYER_SIZE = (60, 45)
 FIRST_TIER_ENEMY_SIZE = (55, 50)
 
 # Screen and caption.
-screen = pygame.display.set_mode(BACKGROUND_SIZE)
+screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption('Plane War Demo')
 
 # Consts...
@@ -59,6 +60,8 @@ IMAGES = {
 
 # Define background 'Surface'.
 background = pygame.transform.smoothscale(IMAGES['background'], BACKGROUND_SIZE)
+background_y = 0
+print(background.get_rect().height)
 
 # Create sprites/groups.
 all_sprites_gp = pygame.sprite.Group()
@@ -66,7 +69,7 @@ explosive_gp = ExplosionGroup()
 player_gp = pygame.sprite.GroupSingle()
 first_tier_enemy_gp = pygame.sprite.Group()
 lasers_gp = pygame.sprite.Group()
-player = PlayerPlane(BACKGROUND_SIZE,
+player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['player'],
                      IMAGES['explosions']['default'],
                      IMAGES['lasers'],
@@ -77,7 +80,7 @@ all_sprites_gp.add(player)
 player_gp.add(player)
 explosive_gp.add(player)
 for i in range(5):
-    first_tier_enemy = FirstTierEnemyPlane(BACKGROUND_SIZE,
+    first_tier_enemy = FirstTierEnemyPlane(SCREEN_SIZE,
                                            IMAGES['enemies']['default'],
                                            IMAGES['explosions']['default'],
                                            FIRST_TIER_ENEMY_BLOOD,
@@ -89,6 +92,8 @@ for i in range(5):
 
 def main():
 
+    global screen, background, background_y
+
     running = True  # Bool value to control if game is running.
     while running:
         # Running the game...
@@ -98,8 +103,11 @@ def main():
                 pygame.quit()
                 sys.exit()
 
-        # Draw background.
-        screen.blit(background, (0, 0))
+        # Draw moving background.
+        rel_background_y = -(background_y % background.get_rect().height)
+        screen.blit(background, (0, rel_background_y + background.get_rect().height))
+        screen.blit(background, (0, rel_background_y))
+        background_y -= 1
 
         # Check collision...
         # Check collision between player and enemies...
