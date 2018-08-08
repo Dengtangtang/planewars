@@ -1,4 +1,4 @@
-''' Customize some groups.
+''' Define customized groups.
 '''
 
 

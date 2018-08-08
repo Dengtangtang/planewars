@@ -21,7 +21,7 @@ class EnemyPlane(FlyingExplosiveObject):
         '''
 
         super().__init__(background_size, image, explosion_images, size)
-        self.speed = 5
+        self._speed = 5
 
         self._reset_location()
 
@@ -29,7 +29,7 @@ class EnemyPlane(FlyingExplosiveObject):
         if not self._killed:
             # If alive...
             if self.rect.top < self._background_height:
-                self.rect.top += self.speed
+                self.rect.top += self._speed
             else:
                 self._reset_location()
             self._trace_current_location_before_explosion()

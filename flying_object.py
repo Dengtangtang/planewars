@@ -1,4 +1,4 @@
-''' Base Plane class.
+''' Base class.
 '''
 
 import pygame
@@ -25,7 +25,7 @@ class FlyingObject(pygame.sprite.Sprite):
         self._killed = False
 
         # Attributes may/shall be overwritten for each flying object.
-        self.speed = 5
+        self._speed = 5
         self.hit_tolerance = 10
 
     def is_killed(self):

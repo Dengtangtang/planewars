@@ -27,7 +27,7 @@ pygame.display.set_caption('Plane War Demo')
 # Clock
 clock = pygame.time.Clock()
 # FPS.
-FPS = 30
+FPS = 45
 # Converted images/surfaces
 IMAGES = {
     'background': pygame.image.load('images/backgrounds/darkpurple.png').convert_alpha(),
@@ -48,28 +48,36 @@ IMAGES = {
             pygame.image.load('images/damages/regularExplosion08.png').convert_alpha(),
         ],
     },
+    'lasers': {
+        'thin_stick': pygame.image.load('images/lasers/laserRed01.png').convert_alpha(),
+    },
 }
 
 # Define background 'Surface'.
 background = pygame.transform.smoothscale(IMAGES['background'], BACKGROUND_SIZE)
 
 # Create sprites/groups.
+all_sprites_gp = pygame.sprite.Group()
+explosive_gp = ExplosionGroup()
+player_gp = pygame.sprite.GroupSingle()
+first_tier_enemy_gp = pygame.sprite.Group()
+lasers_gp = pygame.sprite.Group()
 player = PlayerPlane(BACKGROUND_SIZE,
                      IMAGES['player'],
                      IMAGES['explosions']['default'],
+                     IMAGES['lasers'],
+                     [all_sprites_gp, lasers_gp],
                      PLAYER_SIZE)
-
-all_sprites_gp = ExplosionGroup()
-player_gp = pygame.sprite.Group()
-first_tier_enemy_gp = pygame.sprite.Group()
-
 all_sprites_gp.add(player)
+player_gp.add(player)
+explosive_gp.add(player)
 for i in range(5):
     first_tier_enemy = FirstTierEnemyPlane(BACKGROUND_SIZE,
                                            IMAGES['enemies']['default'],
                                            IMAGES['explosions']['default'],
                                            FIRST_TIER_ENEMY_SIZE)
     first_tier_enemy_gp.add(first_tier_enemy)
+    explosive_gp.add(first_tier_enemy)
     all_sprites_gp.add(first_tier_enemy)
 
 
@@ -88,15 +96,21 @@ def main():
         screen.blit(background, (0, 0))
 
         # Check collision...
+        # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, first_tier_enemy_gp, False)
         if collided_enemies:
             player.set_killed()
             for e in collided_enemies:
                 e.set_killed()
 
+        # Check collision between laser and enemies...
+        for e in first_tier_enemy_gp:
+            if pygame.sprite.spritecollide(e, lasers_gp, True):
+                e.set_killed()
+
         all_sprites_gp.update()
         all_sprites_gp.draw(screen)
-        all_sprites_gp.restore_location_before_explosion()
+        explosive_gp.restore_location_before_explosion()
 
         # Draw player plane.
         # screen.blit(player.image, player.rect)
