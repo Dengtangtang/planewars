@@ -11,6 +11,10 @@ class PlayerPlane(FlyingExplosiveObject):
     '''
     '''
 
+    def _reset_location(self):
+        self.rect.left = (self._background_width - self.rect.width) // 2
+        self.rect.top = self._background_height - self.rect.height
+
     def _move_left(self):
         ''' Move the plane left.
         '''
@@ -47,10 +51,6 @@ class PlayerPlane(FlyingExplosiveObject):
         else:
             self.rect.top = self._background_height - self.rect.height
 
-    def _reset_location(self):
-        self.rect.left = (self._background_width - self.rect.width) // 2
-        self.rect.top = self._background_height - self.rect.height
-
     def __init__(self, background_size, image, explosion_images, size=None):
         ''' Initialize a player plane.
         '''
@@ -75,3 +75,5 @@ class PlayerPlane(FlyingExplosiveObject):
             if keys_pressed[K_RIGHT]:
                 self._move_right()
             self._trace_current_location_before_explosion()
+        else:
+            self._explode()

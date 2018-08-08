@@ -89,8 +89,10 @@ def main():
 
         # Check collision...
         collided_enemies = pygame.sprite.spritecollide(player, first_tier_enemy_gp, False)
-        for e in collided_enemies:
-            e.set_killed()
+        if collided_enemies:
+            player.set_killed()
+            for e in collided_enemies:
+                e.set_killed()
 
         all_sprites_gp.update()
         all_sprites_gp.draw(screen)

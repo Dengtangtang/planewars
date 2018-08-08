@@ -3,11 +3,18 @@
 
 
 from flying_object import FlyingExplosiveObject
+from random import randint
 
 
 class EnemyPlane(FlyingExplosiveObject):
     '''
     '''
+
+    def _reset_location(self):
+        ''' Overwrite
+        '''
+        self.rect.left = randint(0, self._background_width - self.rect.width)
+        self.rect.top = randint(-5 * self.rect.height, -self.rect.height)
 
     def __init__(self, background_size, image, explosion_images, size=None):
         ''' Initialize an enemy plane.

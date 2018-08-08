@@ -2,7 +2,6 @@
 '''
 
 import pygame
-from random import randint
 
 
 class FlyingObject(pygame.sprite.Sprite):
@@ -41,8 +40,10 @@ class FlyingExplosiveObject(FlyingObject):
     '''
 
     def _reset_location(self):
-        self.rect.left = randint(0, self._background_width - self.rect.width)
-        self.rect.top = randint(-5 * self.rect.height, -self.rect.height)
+        ''' Overwrite
+        '''
+
+        raise NotImplementedError('define specific _reset_location')
 
     def _reset_after_explosion(self):
         self._killed = False
