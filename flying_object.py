@@ -8,6 +8,9 @@ class FlyingObject(pygame.sprite.Sprite):
     '''
     '''
 
+    def _reset_location(self):
+        raise NotImplementedError('define specific _reset_location')
+
     def __init__(self, background_size, image, size=None):
         '''
         '''
@@ -32,15 +35,13 @@ class FlyingExplosiveObject(FlyingObject):
     '''
 
     def _reset_location(self):
-        ''' Overwrite
-        '''
-
         raise NotImplementedError('define specific _reset_location')
 
     def _reset_after_explosion(self):
         self._killed = False
         self.image = self._origin_image
         self._blood = self._origin_blood
+        self._power = 0
         self._reset_location()
 
     def _trace_current_location_before_explosion(self):
@@ -74,6 +75,7 @@ class FlyingExplosiveObject(FlyingObject):
         self._killed = False
         self._blood = blood
         self._origin_blood = self._blood
+        self._power = 1
 
     def is_killed(self):
         return self._killed

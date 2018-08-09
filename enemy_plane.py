@@ -13,6 +13,7 @@ class EnemyPlane(FlyingExplosiveObject):
     def _reset_location(self):
         ''' Overwrite.
         '''
+
         self.rect.left = randint(0, self._background_width - self.rect.width)
         self.rect.top = randint(-5 * self.rect.height, -self.rect.height)
 

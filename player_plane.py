@@ -4,7 +4,7 @@
 
 import pygame
 from pygame.locals import *
-from weapons import Laser
+from weapon import Laser
 from flying_object import FlyingExplosiveObject
 
 
@@ -57,17 +57,26 @@ class PlayerPlane(FlyingExplosiveObject):
         '''
 
         laser_speed = 15
-        laser_damage = 1
+        if self._power == 0:
+            laser_damage = 1
+            laser_size = (9, 30)
+        elif self._power == 1:
+            laser_damage = 2
+            laser_size = (9, 30)
+        elif self._power == 2:
+            laser_damage = 3
+            laser_size = (15, 15)
+
         laser = Laser((self._background_width, self._background_height),
-                      self._lasers['thin_stick'],
+                      self._lasers[self._power],
                       self.rect,
                       laser_speed,
                       laser_damage,
-                      self._thick_stick_laser_size)
+                      laser_size)
         for gp in self._groups:
             gp.add(laser)
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, size=None):
+    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, models, size=None):
         ''' Initialize a player plane.
         '''
 
@@ -75,8 +84,10 @@ class PlayerPlane(FlyingExplosiveObject):
         self._speed = 10
         self._lasers = lasers
         self._groups = groups
-        self._thick_stick_laser_size = (9, 30)
         self._fire_laser_delay = 100
+        self._power = 0
+        self._power_limit = 2
+        self._models = models
         self._reset_location()
 
     def update(self):
@@ -103,3 +114,7 @@ class PlayerPlane(FlyingExplosiveObject):
                     self._fire_laser_delay = 100
         else:
             self._explode()
+
+    def power_up(self):
+        if self._power < self._power_limit:
+            self._power += 1

@@ -8,6 +8,10 @@ from flying_object import FlyingObject
 
 class Laser(FlyingObject):
 
+    def _reset_location(self):
+        self.rect.left = self._plane_rect.left + (self._plane_rect.width - self.rect.width) // 2
+        self.rect.top = self._plane_rect.top - self.rect.height
+
     def __init__(self, background_size, image, plane_rect, speed, damage, size=None):
         super().__init__(background_size, image, size)
         self._speed = speed
@@ -15,8 +19,7 @@ class Laser(FlyingObject):
         self._damage = damage
 
         # Initialize location.
-        self.rect.left = self._plane_rect.left + (self._plane_rect.width - self.rect.width) // 2
-        self.rect.top = self._plane_rect.top - self.rect.height
+        self._reset_location()
 
     def update(self):
         self.rect.top -= self._speed

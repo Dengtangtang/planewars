@@ -8,6 +8,7 @@ import pygame
 from pygame.locals import *
 from player_plane import PlayerPlane
 from enemy_plane import FirstTierEnemyPlane
+from supply import Supply
 from my_group import ExplosionGroup
 
 # Initialize all modules.
@@ -15,9 +16,6 @@ pygame.init()
 
 # Screen size.
 SCREEN_SIZE = WIDTH, HEIGHT = 600, 800
-BACKGROUND_SIZE = BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 800
-PLAYER_SIZE = (60, 45)
-FIRST_TIER_ENEMY_SIZE = (55, 50)
 
 # Screen and caption.
 screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -25,20 +23,34 @@ pygame.display.set_caption('Plane War Demo')
 
 # Consts...
 
+BACKGROUND_SIZE = BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 800
+PLAYER_SIZE = (60, 45)
+FIRST_TIER_ENEMY_SIZE = (55, 50)
+SUPPLY_SIZE = (25, 26)
 # Clock
 clock = pygame.time.Clock()
 # FPS.
-FPS = 45
+FPS = 30
 # Blood.
 PLAYER_BLOOD = 5
 FIRST_TIER_ENEMY_BLOOD = 2
 
 # Converted images/surfaces
 IMAGES = {
-    'background': pygame.image.load('images/backgrounds/darkpurple.png').convert_alpha(),
-    'player': pygame.image.load('images/players/playerShip1_red.png').convert_alpha(),
+    'backgrounds': {
+        'default': [
+            pygame.image.load('images/backgrounds/darkPurple.png').convert_alpha(),
+        ]
+    },
+    'players': {
+        'default': [
+            pygame.image.load('images/players/playerShip1_red.png').convert_alpha(),
+        ]
+    },
     'enemies': {
-        'default': pygame.image.load('images/enemies/enemyGreen1.png').convert_alpha(),
+        'default': [
+            pygame.image.load('images/enemies/enemyGreen1.png').convert_alpha(),
+        ]
     },
     'explosions': {
         'default': [
@@ -54,14 +66,24 @@ IMAGES = {
         ],
     },
     'lasers': {
-        'thin_stick': pygame.image.load('images/lasers/laserRed01.png').convert_alpha(),
+        'default': [
+            pygame.image.load('images/lasers/laserRed01.png').convert_alpha(),
+            pygame.image.load('images/lasers/laserRed03.png').convert_alpha(),
+            pygame.image.load('images/lasers/laserRed08.png').convert_alpha(),
+            pygame.image.load('images/lasers/laserRedShot.png').convert_alpha(),
+        ]
+    },
+    'powerup': {
+        'default': [
+            pygame.image.load('images/supplies/powerupRed_bolt.png').convert_alpha(),
+        ]
     },
 }
 
 # Define background 'Surface'.
-background = pygame.transform.smoothscale(IMAGES['background'], BACKGROUND_SIZE)
+background = pygame.transform.smoothscale(IMAGES['backgrounds']['default'][0],
+                                          BACKGROUND_SIZE)
 background_y = 0
-print(background.get_rect().height)
 
 # Create sprites/groups.
 all_sprites_gp = pygame.sprite.Group()
@@ -69,19 +91,27 @@ explosive_gp = ExplosionGroup()
 player_gp = pygame.sprite.GroupSingle()
 first_tier_enemy_gp = pygame.sprite.Group()
 lasers_gp = pygame.sprite.Group()
+powerups_gp = pygame.sprite.Group()
+
 player = PlayerPlane(SCREEN_SIZE,
-                     IMAGES['player'],
+                     IMAGES['players']['default'][0],
                      IMAGES['explosions']['default'],
-                     IMAGES['lasers'],
+                     IMAGES['lasers']['default'],
                      [all_sprites_gp, lasers_gp],
                      PLAYER_BLOOD,
+                     None,
                      PLAYER_SIZE)
-all_sprites_gp.add(player)
+powerup = Supply(SCREEN_SIZE,
+                 IMAGES['powerup']['default'][0],
+                 SUPPLY_SIZE)
+
+all_sprites_gp.add((player, powerup))
 player_gp.add(player)
 explosive_gp.add(player)
+powerups_gp.add(powerup)
 for i in range(5):
     first_tier_enemy = FirstTierEnemyPlane(SCREEN_SIZE,
-                                           IMAGES['enemies']['default'],
+                                           IMAGES['enemies']['default'][0],
                                            IMAGES['explosions']['default'],
                                            FIRST_TIER_ENEMY_BLOOD,
                                            FIRST_TIER_ENEMY_SIZE)
@@ -108,8 +138,17 @@ def main():
         screen.blit(background, (0, rel_background_y + background.get_rect().height))
         screen.blit(background, (0, rel_background_y))
         background_y -= 1
+        if background_y == -background.get_rect().height:
+            background_y = 0
 
         # Check collision...
+
+        # Check collision between powerups and players...
+        collided_powerups = pygame.sprite.spritecollide(player, powerups_gp, False)
+        for p in collided_powerups:
+            p.set_collided()
+            player.power_up()
+
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, first_tier_enemy_gp, False)
         if collided_enemies:
