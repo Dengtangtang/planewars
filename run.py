@@ -117,7 +117,7 @@ cockpit = Supply(SCREEN_SIZE,
                  SUPPLY_SIZE)
 
 
-all_sprites_gp.add((player, powerup, cockpit))
+all_sprites_gp.add(player, powerup, cockpit)
 player_gp.add(player)
 explosive_gp.add(player)
 powerups_gp.add(powerup)

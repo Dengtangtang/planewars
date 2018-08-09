@@ -67,14 +67,24 @@ class PlayerPlane(FlyingExplosiveObject):
             laser_damage = 3
             laser_size = (15, 15)
 
-        laser = Laser((self._background_width, self._background_height),
-                      self._lasers[self._power],
-                      self.rect,
-                      laser_speed,
-                      laser_damage,
-                      laser_size)
-        for gp in self._groups:
-            gp.add(laser)
+        if self._level == 0:
+            positions = ['center']
+        elif self._level == 1:
+            positions = ['left', 'right']
+        elif self._level == 2:
+            positions = ['left', 'right', 'center']
+
+        for i in range(self._level + 1):
+            laser = Laser((self._background_width, self._background_height),
+                          self._lasers[self._power],
+                          self.rect,
+                          self._level,
+                          laser_speed,
+                          laser_damage,
+                          positions[i],
+                          laser_size)
+            for gp in self._groups:
+                gp.add(laser)
 
     def __init__(self, background_size, image, explosion_images, lasers, groups, blood, models, size=None):
         ''' Initialize a player plane.
