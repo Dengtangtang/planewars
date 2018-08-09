@@ -87,7 +87,10 @@ class PlayerPlane(FlyingExplosiveObject):
         self._fire_laser_delay = 100
         self._power = 0
         self._power_limit = 2
-        self._models = models
+        self._level = 0
+        self._level_limit = 2
+        self._models = [pygame.transform.smoothscale(model, size) for model in models] if size is not None else models
+
         self._reset_location()
 
     def update(self):
@@ -118,3 +121,8 @@ class PlayerPlane(FlyingExplosiveObject):
     def power_up(self):
         if self._power < self._power_limit:
             self._power += 1
+
+    def level_up(self):
+        if self._level < self._level_limit:
+            self._level += 1
+        self.image = self._models[self._level]

@@ -26,11 +26,11 @@ pygame.display.set_caption('Plane War Demo')
 BACKGROUND_SIZE = BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 800
 PLAYER_SIZE = (60, 45)
 FIRST_TIER_ENEMY_SIZE = (55, 50)
-SUPPLY_SIZE = (25, 26)
+SUPPLY_SIZE = (25, 25)
 # Clock
 clock = pygame.time.Clock()
 # FPS.
-FPS = 30
+FPS = 60
 # Blood.
 PLAYER_BLOOD = 5
 FIRST_TIER_ENEMY_BLOOD = 2
@@ -39,12 +39,14 @@ FIRST_TIER_ENEMY_BLOOD = 2
 IMAGES = {
     'backgrounds': {
         'default': [
-            pygame.image.load('images/backgrounds/darkPurple.png').convert_alpha(),
+            pygame.image.load('images/backgrounds/starBackground.png').convert_alpha(),
         ]
     },
     'players': {
         'default': [
             pygame.image.load('images/players/playerShip1_red.png').convert_alpha(),
+            pygame.image.load('images/players/playerShip2_red.png').convert_alpha(),
+            pygame.image.load('images/players/playerShip3_red.png').convert_alpha(),
         ]
     },
     'enemies': {
@@ -73,11 +75,16 @@ IMAGES = {
             pygame.image.load('images/lasers/laserRedShot.png').convert_alpha(),
         ]
     },
-    'powerup': {
+    'powerups': {
         'default': [
             pygame.image.load('images/supplies/powerupRed_bolt.png').convert_alpha(),
         ]
     },
+    'cockpits': {
+        'default': [
+            pygame.image.load('images/supplies/cockpitRed_0.png').convert_alpha(),
+        ]
+    }
 }
 
 # Define background 'Surface'.
@@ -92,6 +99,7 @@ player_gp = pygame.sprite.GroupSingle()
 first_tier_enemy_gp = pygame.sprite.Group()
 lasers_gp = pygame.sprite.Group()
 powerups_gp = pygame.sprite.Group()
+cockpits_gp = pygame.sprite.Group()
 
 player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['players']['default'][0],
@@ -99,16 +107,21 @@ player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['lasers']['default'],
                      [all_sprites_gp, lasers_gp],
                      PLAYER_BLOOD,
-                     None,
+                     IMAGES['players']['default'],
                      PLAYER_SIZE)
 powerup = Supply(SCREEN_SIZE,
-                 IMAGES['powerup']['default'][0],
+                 IMAGES['powerups']['default'][0],
+                 SUPPLY_SIZE)
+cockpit = Supply(SCREEN_SIZE,
+                 IMAGES['cockpits']['default'][0],
                  SUPPLY_SIZE)
 
-all_sprites_gp.add((player, powerup))
+
+all_sprites_gp.add((player, powerup, cockpit))
 player_gp.add(player)
 explosive_gp.add(player)
 powerups_gp.add(powerup)
+cockpits_gp.add(cockpit)
 for i in range(5):
     first_tier_enemy = FirstTierEnemyPlane(SCREEN_SIZE,
                                            IMAGES['enemies']['default'][0],
@@ -148,6 +161,12 @@ def main():
         for p in collided_powerups:
             p.set_collided()
             player.power_up()
+
+        # Check collision between cockpit and players...
+        collided_cockpits = pygame.sprite.spritecollide(player, cockpits_gp, False)
+        for c in collided_cockpits:
+            c.set_collided()
+            player.level_up()
 
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, first_tier_enemy_gp, False)

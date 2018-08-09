@@ -42,6 +42,7 @@ class FlyingExplosiveObject(FlyingObject):
         self.image = self._origin_image
         self._blood = self._origin_blood
         self._power = 0
+        self._level = 0
         self._reset_location()
 
     def _trace_current_location_before_explosion(self):
@@ -75,7 +76,8 @@ class FlyingExplosiveObject(FlyingObject):
         self._killed = False
         self._blood = blood
         self._origin_blood = self._blood
-        self._power = 1
+        self._power = 0
+        self._level = 0
 
     def is_killed(self):
         return self._killed
