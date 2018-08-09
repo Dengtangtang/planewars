@@ -37,3 +37,16 @@ class Laser(FlyingObject):
 
     def get_damage_value(self):
         return self._damage
+
+
+class EnemyLaser(Laser):
+
+    def _reset_location(self):
+        if self._position == 'center':
+            self.rect.left = self._plane_rect.left + (self._plane_rect.width - self.rect.width) // 2
+            self.rect.top = self._plane_rect.top + self._plane_rect.height - 2
+
+    def update(self):
+        self.rect.top += self._speed
+        if self.rect.top > self._background_height:
+            self.kill()

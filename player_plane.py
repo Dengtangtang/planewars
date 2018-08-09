@@ -5,14 +5,17 @@
 import pygame
 from pygame.locals import *
 from weapon import Laser
-from flying_object import FlyingExplosiveObject
+from plane import Plane
 
 
-class PlayerPlane(FlyingExplosiveObject):
+class PlayerPlane(Plane):
     '''
     '''
 
     def _reset_location(self):
+        ''' Overwrite this method.
+        '''
+
         self.rect.left = (self._background_width - self.rect.width) // 2
         self.rect.top = self._background_height - self.rect.height
 
@@ -90,14 +93,10 @@ class PlayerPlane(FlyingExplosiveObject):
         ''' Initialize a player plane.
         '''
 
-        super().__init__(background_size, image, explosion_images, blood, size)
+        super().__init__(background_size, image, explosion_images, lasers, groups, blood, size)
         self._speed = 10
-        self._lasers = lasers
-        self._groups = groups
         self._fire_laser_delay = 100
-        self._power = 0
         self._power_limit = 2
-        self._level = 0
         self._level_limit = 2
         self._models = [pygame.transform.smoothscale(model, size) for model in models] if size is not None else models
 
@@ -106,6 +105,9 @@ class PlayerPlane(FlyingExplosiveObject):
     def update(self):
         ''' Listen continuous key operations (e.g. directions)...
         '''
+
+        if self._blood <= 0:
+            self._killed = True
 
         if not self._killed:
             keys_pressed = pygame.key.get_pressed()  # A list of bools of each key.
