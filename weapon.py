@@ -42,6 +42,12 @@ class Laser(FlyingObject):
 class EnemyLaser(Laser):
 
     def _reset_location(self):
+        if self._position == 'left':
+            self.rect.left = self._plane_rect.left + 2
+            self.rect.top = self._plane_rect.top + self._plane_rect.height - 2
+        if self._position == 'right':
+            self.rect.left = self._plane_rect.left + self._plane_rect.width - self.rect.width - 2
+            self.rect.top = self._plane_rect.top + self._plane_rect.height - 2
         if self._position == 'center':
             self.rect.left = self._plane_rect.left + (self._plane_rect.width - self.rect.width) // 2
             self.rect.top = self._plane_rect.top + self._plane_rect.height - 2
