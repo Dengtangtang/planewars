@@ -21,11 +21,11 @@ class EnemyPlane(Plane):
         self.rect.left = randint(0, self._background_width - self.rect.width)
         self.rect.top = randint(self._y_offset * self.rect.height, -self.rect.height)
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, size=None):
+    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, hit_damage, size=None):
         ''' Initialize an enemy plane.
         '''
 
-        super().__init__(background_size, image, explosion_images, lasers, groups, blood, size)
+        super().__init__(background_size, image, explosion_images, lasers, groups, blood, hit_damage, size)
         self._speed = 5
         self._fire_laser_delay = 500
         self._reset_location()
@@ -70,8 +70,8 @@ class FirstTierEnemyPlane(EnemyPlane):
             for gp in self._groups:
                 gp.add(laser)
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, size=None):
-        super().__init__(background_size, image, explosion_images, lasers, groups, blood, size)
+    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, hit_damage, size=None):
+        super().__init__(background_size, image, explosion_images, lasers, groups, blood, hit_damage, size)
         self._laser_speed = 10
         self._laser_damage = 1
         self._laser_size = (15, 15)
@@ -79,8 +79,8 @@ class FirstTierEnemyPlane(EnemyPlane):
 
 class SecondTierEnemyPlane(FirstTierEnemyPlane):
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, size=None):
-        super().__init__(background_size, image, explosion_images, lasers, groups, blood, size)
+    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, hit_damage, size=None):
+        super().__init__(background_size, image, explosion_images, lasers, groups, blood, hit_damage, size)
         self._laser_size = (9, 30)
         self._laser_damage = 2
 
@@ -102,8 +102,8 @@ class UFO(EnemyPlane):
             for gp in self._groups:
                 gp.add(laser)
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, size=None):
-        super().__init__(background_size, image, explosion_images, lasers, groups, blood, size)
+    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, hit_damage, size=None):
+        super().__init__(background_size, image, explosion_images, lasers, groups, blood, hit_damage, size)
         self._laser_speed = 10
         self._laser_size = (9, 30)
         self._laser_damage = 3

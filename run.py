@@ -34,10 +34,17 @@ SUPPLY_SIZE = (25, 25)
 FPS = 60
 
 # Blood.
-PLAYER_BLOOD = 5
+PLAYER_BLOOD = 10
 FIRST_TIER_ENEMY_BLOOD = 5
 SECOND_TIER_ENEMY_BLOOD = 8
 UFO_BLOOD = 15
+
+# Hit damage.
+PLAYER_HIT_DAMAGE = 0
+FIRST_TIER_ENEMY_HIT_DAMAGE = 4
+SECOND_TIER_ENEMY_HIT_DAMAGE = 4
+UFO_HIT_DAMAGE = 4
+
 
 # Quantities.
 N_FIRST_TIER_ENEMIES = 5
@@ -81,6 +88,17 @@ IMAGES = {
             pygame.image.load('images/damages/regularExplosion07.png').convert_alpha(),
             pygame.image.load('images/damages/regularExplosion08.png').convert_alpha(),
         ],
+        'player': [
+            pygame.image.load('images/damages/sonicExplosion00.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion01.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion02.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion03.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion04.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion05.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion06.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion07.png').convert_alpha(),
+            pygame.image.load('images/damages/sonicExplosion08.png').convert_alpha(),
+        ]
     },
     'lasers': {
         'player': [
@@ -136,10 +154,11 @@ cockpits_gp = pygame.sprite.Group()
 
 player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['players']['default'][0],
-                     IMAGES['explosions']['default'],
+                     IMAGES['explosions']['player'],
                      IMAGES['lasers']['player'],
                      [player_lasers_gp, lasers_gp],
                      PLAYER_BLOOD,
+                     PLAYER_HIT_DAMAGE,
                      IMAGES['players']['default'],
                      PLAYER_SIZE)
 powerup = Supply(SCREEN_SIZE,
@@ -163,6 +182,7 @@ for i in range(N_FIRST_TIER_ENEMIES):
                                            IMAGES['lasers']['first_tier_enemy'],
                                            [enemy_lasers_gp, lasers_gp],
                                            FIRST_TIER_ENEMY_BLOOD,
+                                           FIRST_TIER_ENEMY_HIT_DAMAGE,
                                            FIRST_TIER_ENEMY_SIZE)
     # first_tier_enemy_gp.add(first_tier_enemy)
     # enemies_gp.add(first_tier_enemy)
@@ -178,6 +198,7 @@ for i in range(N_SECOND_TIER_ENEMIES):
                                              IMAGES['lasers']['second_tier_enemy'],
                                              [enemy_lasers_gp, lasers_gp],
                                              SECOND_TIER_ENEMY_BLOOD,
+                                             SECOND_TIER_ENEMY_HIT_DAMAGE,
                                              SECOND_TIER_ENEMY_SIZE)
     second_tier_enemy.add(second_tier_enemy_gp,
                           enemies_gp,
@@ -190,6 +211,7 @@ for i in range(N_UFOS):
               IMAGES['lasers']['ufo'],
               [enemy_lasers_gp, lasers_gp],
               UFO_BLOOD,
+              UFO_HIT_DAMAGE,
               UFO_SIZE)
     ufo.add(ufo_gp,
             enemies_gp,
@@ -237,9 +259,12 @@ def main():
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, enemies_gp, False)
         if collided_enemies:
-            player.set_killed()
+            # player.set_killed()
+            total_hit_damage = 0
             for e in collided_enemies:
+                total_hit_damage += e.get_hit_damage_value()
                 e.set_killed()
+            player.lose_blood(total_hit_damage)
 
         # Check collision between player laser and enemies...
         for e in enemies_gp:

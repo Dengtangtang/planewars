@@ -17,8 +17,8 @@ class Plane(FlyingExplosiveObject):
         self._power = self._origin_power
         self._level = self._origin_level
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, size=None):
-        super().__init__(background_size, image, explosion_images, blood, size)
+    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, hit_damage, size=None):
+        super().__init__(background_size, image, explosion_images, blood, hit_damage, size)
         self._power = 0
         self._level = 0
         self._origin_level = self._level

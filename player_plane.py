@@ -90,11 +90,11 @@ class PlayerPlane(Plane):
             for gp in self._groups:
                 gp.add(laser)
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, models, size=None):
+    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, hit_damage, models, size=None):
         ''' Initialize a player plane.
         '''
 
-        super().__init__(background_size, image, explosion_images, lasers, groups, blood, size)
+        super().__init__(background_size, image, explosion_images, lasers, groups, blood, hit_damage, size)
         self._speed = 10
         self._fire_laser_delay = 100
         self._power_limit = 2
