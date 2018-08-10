@@ -9,7 +9,7 @@ from pygame.locals import *
 from player_plane import PlayerPlane
 from enemy_plane import FirstTierEnemyPlane, SecondTierEnemyPlane, UFO
 from supply import Supply
-from my_group import ExplosionGroup
+from my_group import ExplosionGroup, LaserGroup
 
 # Initialize all modules.
 pygame.init()
@@ -86,17 +86,20 @@ IMAGES = {
         'player': [
             pygame.image.load('images/lasers/laserRed01.png').convert_alpha(),
             pygame.image.load('images/lasers/laserRed04.png').convert_alpha(),
-            pygame.image.load('images/lasers/laserRed08.png').convert_alpha(),
+            pygame.image.load('images/lasers/laserRed09.png').convert_alpha(),
             pygame.image.load('images/lasers/laserRedShot.png').convert_alpha(),
         ],
         'first_tier_enemy': [
             pygame.image.load('images/lasers/laserBlue09.png').convert_alpha(),
+            pygame.image.load('images/lasers/laserBlue08.png').convert_alpha(),
         ],
         'second_tier_enemy': [
             pygame.image.load('images/lasers/laserBlue13.png').convert_alpha(),
+            pygame.image.load('images/lasers/laserBlue08.png').convert_alpha(),
         ],
         'ufo': [
             pygame.image.load('images/lasers/laserBlue15.png').convert_alpha(),
+            pygame.image.load('images/lasers/laserBlue08.png').convert_alpha(),
         ],
     },
     'powerups': {
@@ -121,7 +124,7 @@ explosive_gp = ExplosionGroup()
 supplies_gp = pygame.sprite.Group()
 player_gp = pygame.sprite.GroupSingle()
 enemies_gp = pygame.sprite.Group()
-lasers_gp = pygame.sprite.Group()
+lasers_gp = LaserGroup()
 
 first_tier_enemy_gp = pygame.sprite.Group()
 second_tier_enemy_gp = pygame.sprite.Group()
@@ -238,15 +241,21 @@ def main():
             for e in collided_enemies:
                 e.set_killed()
 
-        # Check collision between laser and enemies...
+        # Check collision between player laser and enemies...
         for e in enemies_gp:
-            hitted_lasers = pygame.sprite.spritecollide(e, player_lasers_gp, True)
-            total_damage = sum(hit.get_damage_value() for hit in hitted_lasers)
+            hitted_lasers = pygame.sprite.spritecollide(e, player_lasers_gp, False)
+            total_damage = 0
+            for hit in hitted_lasers:
+                hit.set_hitted()
+                total_damage += hit.get_damage_value()
             e.lose_blood(total_damage)
 
-        # Check collision between laser and player...
-        hitted_lasers = pygame.sprite.spritecollide(player, enemy_lasers_gp, True)
-        total_damage = sum(hit.get_damage_value() for hit in hitted_lasers)
+        # Check collision between enemy laser and player...
+        hitted_lasers = pygame.sprite.spritecollide(player, enemy_lasers_gp, False)
+        total_damage = 0
+        for hit in hitted_lasers:
+            hit.set_hitted()
+            total_damage += hit.get_damage_value()
         player.lose_blood(total_damage)
 
         # Draw player plane.
@@ -254,16 +263,16 @@ def main():
         player_gp.draw(screen)
 
         # Draw enemies.
-        # enemies_gp.update()
-        # enemies_gp.draw(screen)
+        enemies_gp.update()
+        enemies_gp.draw(screen)
         # first_tier_enemy_gp.update()
         # first_tier_enemy_gp.draw(screen)
 
         # second_tier_enemy_gp.update()
         # second_tier_enemy_gp.draw(screen)
 
-        ufo_gp.update()
-        ufo_gp.draw(screen)
+        # ufo_gp.update()
+        # ufo_gp.draw(screen)
 
         # Draw lasers.
         lasers_gp.update()
@@ -275,6 +284,8 @@ def main():
 
         # Reset explosive group sprites.
         explosive_gp.restore_location_before_explosion()
+
+        lasers_gp.kill_hitted_lasers()
 
         pygame.display.flip()
 

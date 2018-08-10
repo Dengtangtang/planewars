@@ -84,6 +84,7 @@ class PlayerPlane(Plane):
                           self._level,
                           laser_speed,
                           laser_damage,
+                          self._lasers[-1],
                           positions[i],
                           laser_size)
             for gp in self._groups:

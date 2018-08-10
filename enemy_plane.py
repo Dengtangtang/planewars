@@ -17,6 +17,7 @@ class EnemyPlane(Plane):
         ''' Overwrite this method.
         '''
 
+        self._blood = self._origin_blood
         self.rect.left = randint(0, self._background_width - self.rect.width)
         self.rect.top = randint(self._y_offset * self.rect.height, -self.rect.height)
 
@@ -63,6 +64,7 @@ class FirstTierEnemyPlane(EnemyPlane):
                                self._level,
                                self._laser_speed,
                                self._laser_damage,
+                               self._lasers[-1],
                                'center',
                                self._laser_size)
             for gp in self._groups:
@@ -94,6 +96,7 @@ class UFO(EnemyPlane):
                                self._level,
                                self._laser_speed,
                                self._laser_damage,
+                               self._lasers[-1],
                                positions[i],
                                self._laser_size)
             for gp in self._groups:
