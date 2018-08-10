@@ -24,6 +24,9 @@ clock = pygame.time.Clock()  # Clock.
 
 # Consts.
 BACKGROUND_SIZE = BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 800
+BLOOD_STRIP_SIZE = BLOOD_STRIP_WIDTH, BLOOD_STRIP_HEIGHT = 3, 15
+BLOOD_STRIP_GAP = 10
+BLOOD_STRIP_COLOR = (14, 242, 44)
 PLAYER_SIZE = (60, 45)
 FIRST_TIER_ENEMY_SIZE = (55, 50)
 SECOND_TIER_ENEMY_SIZE = (55, 50)
@@ -225,6 +228,8 @@ def main():
 
     running = True  # Bool value to control if game is running.
     while running:
+        clock.tick(FPS)
+
         # Running the game...
         for event in pygame.event.get():
             # Listen events...
@@ -288,13 +293,13 @@ def main():
         player_gp.draw(screen)
 
         # Draw enemies.
-        enemies_gp.update()
-        enemies_gp.draw(screen)
+        # enemies_gp.update()
+        # enemies_gp.draw(screen)
         # first_tier_enemy_gp.update()
         # first_tier_enemy_gp.draw(screen)
 
-        # second_tier_enemy_gp.update()
-        # second_tier_enemy_gp.draw(screen)
+        second_tier_enemy_gp.update()
+        second_tier_enemy_gp.draw(screen)
 
         # ufo_gp.update()
         # ufo_gp.draw(screen)
@@ -307,14 +312,21 @@ def main():
         supplies_gp.update()
         supplies_gp.draw(screen)
 
+        # Draw blood strip.
+        temp = BLOOD_STRIP_GAP
+        for i in range(player.get_blood()):
+            pygame.draw.rect(screen,
+                             BLOOD_STRIP_COLOR,
+                             Rect((WIDTH - BLOOD_STRIP_WIDTH - temp, BLOOD_STRIP_GAP), BLOOD_STRIP_SIZE),
+                             0)
+            temp = BLOOD_STRIP_GAP * (i + 2)
+
         # Reset explosive group sprites.
         explosive_gp.restore_location_before_explosion()
 
         lasers_gp.kill_hitted_lasers()
 
         pygame.display.flip()
-
-        clock.tick(FPS)
 
 
 if __name__ == '__main__':

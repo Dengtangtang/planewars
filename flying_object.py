@@ -101,3 +101,6 @@ class FlyingExplosiveObject(FlyingObject):
 
     def get_hit_damage_value(self):
         return self._hit_damage
+
+    def get_blood(self):
+        return self._blood
