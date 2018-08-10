@@ -60,10 +60,10 @@ class PlayerPlane(Plane):
             laser_size = (9, 30)
         elif self._power == 1:
             laser_damage = 2
-            laser_size = (9, 30)
+            laser_size = (10, 30)
         elif self._power == 2:
             laser_damage = 3
-            laser_size = (15, 15)
+            laser_size = (18, 18)
 
         if self._level == 0:
             positions = ['center']

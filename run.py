@@ -14,19 +14,15 @@ from my_group import ExplosionGroup, LaserGroup
 # Initialize all modules.
 pygame.init()
 
-# Screen size.
-SCREEN_SIZE = WIDTH, HEIGHT = 600, 800
-
-# Screen and caption.
+SCREEN_SIZE = WIDTH, HEIGHT = 600, 800  # Screen size.
 screen = pygame.display.set_mode(SCREEN_SIZE)  # Screen.
 pygame.display.set_caption('Plane War Demo')  # Caption.
 clock = pygame.time.Clock()  # Clock.
 
-# Consts.
+# Sizes.
 BACKGROUND_SIZE = BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 800
 BLOOD_STRIP_SIZE = BLOOD_STRIP_WIDTH, BLOOD_STRIP_HEIGHT = 3, 15
 BLOOD_STRIP_GAP = 10
-BLOOD_STRIP_COLOR = (14, 242, 44)
 PLAYER_SIZE = (60, 45)
 FIRST_TIER_ENEMY_SIZE = (55, 50)
 SECOND_TIER_ENEMY_SIZE = (55, 50)
@@ -34,21 +30,27 @@ UFO_SIZE = (60, 60)
 BOLT_SIZE = (15, 24)
 STAR_SIZE = PILL_SIZE = SHIELD_SIZE = (20, 20)
 
+# Colors.
+GREEN = (14, 242, 44)
+WHITE = (255, 255, 255)
+
 # FPS.
 FPS = 60
 
-# Blood.
+# Font.
+FONTFILE = pygame.font.match_font('arial')
+
+# Bloods.
 PLAYER_BLOOD = 10
 FIRST_TIER_ENEMY_BLOOD = 5
 SECOND_TIER_ENEMY_BLOOD = 8
 UFO_BLOOD = 15
 
-# Hit damage.
+# Hit damages.
 PLAYER_HIT_DAMAGE = 0
 FIRST_TIER_ENEMY_HIT_DAMAGE = 4
 SECOND_TIER_ENEMY_HIT_DAMAGE = 4
 UFO_HIT_DAMAGE = 4
-
 
 # Quantities.
 N_FIRST_TIER_ENEMIES = 1
@@ -152,30 +154,31 @@ IMAGES = {
 }
 
 # Define background 'Surface'.
+background_y = 0
 background = pygame.transform.smoothscale(IMAGES['backgrounds']['default'][0],
                                           BACKGROUND_SIZE)
-background_y = 0
 
 # Create sprites/groups.
+# General groups.
 explosive_gp = ExplosionGroup()
 supplies_gp = pygame.sprite.Group()
 player_gp = pygame.sprite.GroupSingle()
 enemies_gp = pygame.sprite.Group()
 lasers_gp = LaserGroup()
+shields_gp = pygame.sprite.GroupSingle()
 
+# Specific groups
 first_tier_enemy_gp = pygame.sprite.Group()
 second_tier_enemy_gp = pygame.sprite.Group()
 ufo_gp = pygame.sprite.Group()
-shields_gp = pygame.sprite.GroupSingle()
-
 player_lasers_gp = pygame.sprite.Group()
 enemy_lasers_gp = pygame.sprite.Group()
-
 powerups_gp = pygame.sprite.Group()
 stars_gp = pygame.sprite.Group()
 shield_supplies_gp = pygame.sprite.Group()
 pills_gp = pygame.sprite.Group()
 
+# Sprites.
 player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['players']['default'][0],
                      IMAGES['explosions']['player'],
@@ -200,16 +203,6 @@ pill = Supply(SCREEN_SIZE,
               IMAGES['pills']['default'][0],
               PILL_SIZE)
 
-
-player_gp.add(player)
-supplies_gp.add(powerup, star, shield, pill)
-explosive_gp.add(player)
-powerups_gp.add(powerup)
-stars_gp.add(star)
-shield_supplies_gp.add(shield)
-pills_gp.add(pill)
-
-
 for i in range(N_FIRST_TIER_ENEMIES):
     first_tier_enemy = FirstTierEnemyPlane(SCREEN_SIZE,
                                            IMAGES['enemies']['first_tier_enemy'][0],
@@ -219,9 +212,6 @@ for i in range(N_FIRST_TIER_ENEMIES):
                                            FIRST_TIER_ENEMY_BLOOD,
                                            FIRST_TIER_ENEMY_HIT_DAMAGE,
                                            FIRST_TIER_ENEMY_SIZE)
-    # first_tier_enemy_gp.add(first_tier_enemy)
-    # enemies_gp.add(first_tier_enemy)
-    # explosive_gp.add(first_tier_enemy)
     first_tier_enemy.add(first_tier_enemy_gp,
                          enemies_gp,
                          explosive_gp)
@@ -252,6 +242,20 @@ for i in range(N_UFOS):
             enemies_gp,
             explosive_gp)
 
+player.add(player_gp, explosive_gp)
+powerup.add(supplies_gp, powerups_gp)
+star.add(supplies_gp, stars_gp)
+shield.add(supplies_gp, shield_supplies_gp)
+pill.add(supplies_gp, pills_gp)
+
+
+def draw_text(surf, text, size, x, y):
+    font = pygame.font.Font(FONTFILE, size)
+    text_surface = font.render(text, True, WHITE)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    surf.blit(text_surface, text_rect)
+
 
 def main():
 
@@ -279,62 +283,48 @@ def main():
             background_y = 0
 
         # Check collision...
-        # Check collision between powerups and players...
-        collided_powerups = pygame.sprite.spritecollide(player, powerups_gp, False)
-        for p in collided_powerups:
-            p.set_picked()
-            player.power_up()
-
-        # Check collision between stars and players...
-        collided_stars = pygame.sprite.spritecollide(player, stars_gp, False)
-        for c in collided_stars:
-            c.set_picked()
-            player.level_up()
-
-        # Check collision between pills and players...
-        collided_pills = pygame.sprite.spritecollide(player, pills_gp, False)
-        for p in collided_pills:
-            p.set_picked()
-            player.blood_restore()
-
-        # Check collision between shield supplies and players...
-        collided_shields = pygame.sprite.spritecollide(player, shield_supplies_gp, False)
-        for sh in collided_shields:
-            sh.set_picked()
-            player.set_protected()
-            shielding_timer = 4000
+        # Check collision between supplies and players...
+        collided_supplies = pygame.sprite.spritecollide(player, supplies_gp, False)
+        for supp in collided_supplies:
+            supp.set_picked()
+            if supp in powerups_gp:
+                player.power_up()
+            elif supp in stars_gp:
+                player.level_up()
+            elif supp in pills_gp:
+                player.blood_restore()
+            elif supp in shield_supplies_gp:
+                player.set_protected()
+                shielding_timer = 4000
 
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, enemies_gp, False)
-        if collided_enemies:
-            total_hit_damage = 0
-            for e in collided_enemies:
-                total_hit_damage += e.get_hit_damage_value()
-                e.set_killed()
-            player.lose_blood(total_hit_damage)
+        damages = 0
+        for e in collided_enemies:
+            damages += e.get_hit_damage_value()
+            e.set_killed()
+        player.lose_blood(damages)
 
         # Check collision between player laser and enemies...
         for e in enemies_gp:
             hitted_lasers = pygame.sprite.spritecollide(e, player_lasers_gp, False)
-            total_damage = 0
+            damages = 0
             for hit in hitted_lasers:
                 hit.set_hitted()
-                total_damage += hit.get_damage_value()
-            e.lose_blood(total_damage)
+                damages += hit.get_damage_value()
+            e.lose_blood(damages)
 
         # Check collision between enemy laser and player...
         hitted_lasers = pygame.sprite.spritecollide(player, enemy_lasers_gp, False)
-        total_damage = 0
+        damages = 0
         for hit in hitted_lasers:
             hit.set_hitted()
-            total_damage += hit.get_damage_value()
-        player.lose_blood(total_damage)
+            damages += hit.get_damage_value()
+        player.lose_blood(damages)
 
         if player.is_protected() and shields_gp:
             # Check collision between enemy laser and shield...
-            hitted_lasers = pygame.sprite.spritecollide(shields_gp.sprite,
-                                                        enemy_lasers_gp,
-                                                        False)
+            hitted_lasers = pygame.sprite.spritecollide(shields_gp.sprite, enemy_lasers_gp, False)
             for hit in hitted_lasers:
                 hit.set_hitted()
 
@@ -382,10 +372,13 @@ def main():
         temp = BLOOD_STRIP_GAP
         for i in range(player.get_blood()):
             pygame.draw.rect(screen,
-                             BLOOD_STRIP_COLOR,
-                             Rect((WIDTH - BLOOD_STRIP_WIDTH - temp, BLOOD_STRIP_GAP), BLOOD_STRIP_SIZE),
+                             GREEN,
+                             Rect((WIDTH - BLOOD_STRIP_WIDTH - temp, 10), BLOOD_STRIP_SIZE),
                              0)
             temp = BLOOD_STRIP_GAP * (i + 2)
+
+        # Draw score.
+        draw_text(screen, '10', 18, WIDTH / 2, 10)
 
         # Reset explosive group sprites.
         explosive_gp.restore_location_before_explosion()
