@@ -84,8 +84,8 @@ class FlyingExplosiveObject(FlyingObject):
     def is_killed(self):
         return self._killed
 
-    def set_killed(self):
-        self._killed = True
+    def set_killed(self, v=True):
+        self._killed = v
 
     def restore_location_before_explosion(self):
         ''' Restore self.rect's location to when the object is alive.

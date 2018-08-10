@@ -41,5 +41,5 @@ class Supply(FlyingObject):
             # self.kill()  # WILL USE THIS WHEN I USE TIME CONTROLLER.
             self._reset_location()
 
-    def set_picked(self):
-        self._picked = True
+    def set_picked(self, v=True):
+        self._picked = v

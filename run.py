@@ -257,10 +257,11 @@ def main():
 
     global screen
     global background, background_y
-
+    shielding_timer = 4000  # 4 seconds.
     running = True  # Bool value to control if game is running.
+
     while running:
-        clock.tick(FPS)
+        dt = clock.tick(FPS)
 
         # Running the game...
         for event in pygame.event.get():
@@ -276,9 +277,6 @@ def main():
         background_y -= 1
         if background_y == -background.get_rect().height:
             background_y = 0
-
-        # Time controller.
-        # dt = pygame.time.get_ticks()
 
         # Check collision...
         # Check collision between powerups and players...
@@ -304,6 +302,7 @@ def main():
         for sh in collided_shields:
             sh.set_picked()
             player.set_protected()
+            shielding_timer = 4000
 
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, enemies_gp, False)
@@ -331,17 +330,25 @@ def main():
             total_damage += hit.get_damage_value()
         player.lose_blood(total_damage)
 
-        # Check collision between enemy laser / enemies and shield...
         if player.is_protected() and shields_gp:
+            # Check collision between enemy laser and shield...
             hitted_lasers = pygame.sprite.spritecollide(shields_gp.sprite,
                                                         enemy_lasers_gp,
                                                         False)
             for hit in hitted_lasers:
                 hit.set_hitted()
 
+            # Check collision between enemies and shield...
             collided_enemies = pygame.sprite.spritecollide(shields_gp.sprite, enemies_gp, False)
             for e in collided_enemies:
                 e.set_killed()
+
+            # Counting down for shielding...
+            shielding_timer -= dt
+            if shielding_timer <= 0:
+                player.set_protected(False)
+                shields_gp.empty()
+                shielding_timer = 4000
 
         # Draw player plane.
         player_gp.update()

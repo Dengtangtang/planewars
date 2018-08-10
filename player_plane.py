@@ -142,8 +142,8 @@ class PlayerPlane(Plane):
     def is_protected(self):
         return self._protected
 
-    def set_protected(self):
-        self._protected = True
+    def set_protected(self, v=True):
+        self._protected = v
 
     def power_up(self):
         if self._power < self._power_limit:

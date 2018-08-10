@@ -54,8 +54,8 @@ class Laser(FlyingObject):
     def get_damage_value(self):
         return self._damage
 
-    def set_hitted(self):
-        self._hitted = True
+    def set_hitted(self, v=True):
+        self._hitted = v
 
     def is_hitted(self):
         return self._hitted
