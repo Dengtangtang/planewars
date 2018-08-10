@@ -46,6 +46,11 @@ FIRST_TIER_ENEMY_BLOOD = 5
 SECOND_TIER_ENEMY_BLOOD = 8
 UFO_BLOOD = 15
 
+# Scores.
+FIRST_TIER_ENEMY_SCORE = 200
+SECOND_TIER_ENEMY_SCORE = 300
+UFO_SCORE = 500
+
 # Hit damages.
 PLAYER_HIT_DAMAGE = 0
 FIRST_TIER_ENEMY_HIT_DAMAGE = 4
@@ -211,6 +216,7 @@ for i in range(N_FIRST_TIER_ENEMIES):
                                            [enemy_lasers_gp, lasers_gp],
                                            FIRST_TIER_ENEMY_BLOOD,
                                            FIRST_TIER_ENEMY_HIT_DAMAGE,
+                                           FIRST_TIER_ENEMY_SCORE,
                                            FIRST_TIER_ENEMY_SIZE)
     first_tier_enemy.add(first_tier_enemy_gp,
                          enemies_gp,
@@ -224,6 +230,7 @@ for i in range(N_SECOND_TIER_ENEMIES):
                                              [enemy_lasers_gp, lasers_gp],
                                              SECOND_TIER_ENEMY_BLOOD,
                                              SECOND_TIER_ENEMY_HIT_DAMAGE,
+                                             SECOND_TIER_ENEMY_SCORE,
                                              SECOND_TIER_ENEMY_SIZE)
     second_tier_enemy.add(second_tier_enemy_gp,
                           enemies_gp,
@@ -237,6 +244,7 @@ for i in range(N_UFOS):
               [enemy_lasers_gp, lasers_gp],
               UFO_BLOOD,
               UFO_HIT_DAMAGE,
+              UFO_SCORE,
               UFO_SIZE)
     ufo.add(ufo_gp,
             enemies_gp,
@@ -261,6 +269,7 @@ def main():
 
     global screen
     global background, background_y
+    score = 0
     shielding_timer = 4000  # 4 seconds.
     running = True  # Bool value to control if game is running.
 
@@ -378,7 +387,8 @@ def main():
             temp = BLOOD_STRIP_GAP * (i + 2)
 
         # Draw score.
-        draw_text(screen, '10', 18, WIDTH / 2, 10)
+        score += sum(e.get_score() for e in enemies_gp if e.is_killed())
+        draw_text(screen, str(score // 10), 18, WIDTH // 2, 10)
 
         # Reset explosive group sprites.
         explosive_gp.restore_location_before_explosion()

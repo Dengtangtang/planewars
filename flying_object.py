@@ -49,7 +49,6 @@ class FlyingExplosiveObject(FlyingObject):
         self._curr_rect_top = self.rect.top
 
     def _explode(self):
-
         if 0 <= self._explosion_counter < len(self._explosions):
             # Update image...
             explo = self._explosions[self._explosion_counter]
