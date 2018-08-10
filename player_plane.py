@@ -139,3 +139,8 @@ class PlayerPlane(Plane):
         if self._level < self._level_limit:
             self._level += 1
         self.image = self._models[self._level]
+
+    def blood_restore(self):
+        self._blood += 3
+        if self._blood > self._origin_blood:
+            self._blood = self._origin_blood

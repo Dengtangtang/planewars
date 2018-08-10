@@ -31,7 +31,8 @@ PLAYER_SIZE = (60, 45)
 FIRST_TIER_ENEMY_SIZE = (55, 50)
 SECOND_TIER_ENEMY_SIZE = (55, 50)
 UFO_SIZE = (60, 60)
-SUPPLY_SIZE = (25, 25)
+BOLT_SIZE = (15, 24)
+STAR_SIZE = PILL_SIZE = SHIELD_SIZE = (20, 20)
 
 # FPS.
 FPS = 60
@@ -125,12 +126,22 @@ IMAGES = {
     },
     'powerups': {
         'default': [
-            pygame.image.load('images/supplies/powerupRed_bolt.png').convert_alpha(),
+            pygame.image.load('images/supplies/bolt_gold.png').convert_alpha(),
         ],
     },
-    'cockpits': {
+    'stars': {
         'default': [
-            pygame.image.load('images/supplies/cockpitRed_0.png').convert_alpha(),
+            pygame.image.load('images/supplies/star_gold.png').convert_alpha(),
+        ],
+    },
+    'pills': {
+        'default': [
+            pygame.image.load('images/supplies/pill_green.png').convert_alpha(),
+        ],
+    },
+    'shields': {
+        'default': [
+            pygame.image.load('images/supplies/shield_gold.png').convert_alpha(),
         ],
     },
 }
@@ -153,7 +164,9 @@ ufo_gp = pygame.sprite.Group()
 player_lasers_gp = pygame.sprite.Group()
 enemy_lasers_gp = pygame.sprite.Group()
 powerups_gp = pygame.sprite.Group()
-cockpits_gp = pygame.sprite.Group()
+stars_gp = pygame.sprite.Group()
+shields_gp = pygame.sprite.Group()
+pills_gp = pygame.sprite.Group()
 
 player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['players']['default'][0],
@@ -166,17 +179,26 @@ player = PlayerPlane(SCREEN_SIZE,
                      PLAYER_SIZE)
 powerup = Supply(SCREEN_SIZE,
                  IMAGES['powerups']['default'][0],
-                 SUPPLY_SIZE)
-cockpit = Supply(SCREEN_SIZE,
-                 IMAGES['cockpits']['default'][0],
-                 SUPPLY_SIZE)
+                 BOLT_SIZE)
+star = Supply(SCREEN_SIZE,
+              IMAGES['stars']['default'][0],
+              STAR_SIZE)
+shield = Supply(SCREEN_SIZE,
+                IMAGES['shields']['default'][0],
+                SHIELD_SIZE)
+pill = Supply(SCREEN_SIZE,
+              IMAGES['pills']['default'][0],
+              PILL_SIZE)
 
 
 player_gp.add(player)
-supplies_gp.add(powerup, cockpit)
+supplies_gp.add(powerup, star, shield, pill)
 explosive_gp.add(player)
 powerups_gp.add(powerup)
-cockpits_gp.add(cockpit)
+stars_gp.add(star)
+shields_gp.add(shield)
+pills_gp.add(pill)
+
 
 for i in range(N_FIRST_TIER_ENEMIES):
     first_tier_enemy = FirstTierEnemyPlane(SCREEN_SIZE,
@@ -255,11 +277,17 @@ def main():
             p.set_picked()
             player.power_up()
 
-        # Check collision between cockpit and players...
-        collided_cockpits = pygame.sprite.spritecollide(player, cockpits_gp, False)
-        for c in collided_cockpits:
+        # Check collision between stars and players...
+        collided_stars = pygame.sprite.spritecollide(player, stars_gp, False)
+        for c in collided_stars:
             c.set_picked()
             player.level_up()
+
+        # Check collision between pills and players...
+        collided_pills = pygame.sprite.spritecollide(player, pills_gp, False)
+        for p in collided_pills:
+            p.set_picked()
+            player.blood_restore()
 
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, enemies_gp, False)
