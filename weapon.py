@@ -85,3 +85,14 @@ class EnemyLaser(Laser):
             self.rect = self.image.get_rect()
             self.rect.left = self._curr_rect_left - (self.rect.width - self._origin_image.get_rect().width) // 2
             self.rect.top = self._curr_rect_top + self.rect.height // 2
+
+
+class Shield(FlyingObject):
+
+    def __init__(self, background_size, image, plane_rect, size=None):
+        super().__init__(background_size, image, size)
+        self._plane_rect = plane_rect
+
+    def update(self):
+        self.rect.left = self._plane_rect.left - (self.rect.width - self._plane_rect.width) // 2
+        self.rect.top = self._plane_rect.top - self._plane_rect.height

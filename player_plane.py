@@ -4,7 +4,7 @@
 
 import pygame
 from pygame.locals import *
-from weapon import Laser
+from weapon import Laser, Shield
 from plane import Plane
 
 
@@ -15,14 +15,13 @@ class PlayerPlane(Plane):
     def _reset_location(self):
         ''' Overwrite this method.
         '''
-
+        self._protected = False
         self.rect.left = (self._background_width - self.rect.width) // 2
         self.rect.top = self._background_height - self.rect.height
 
     def _move_left(self):
         ''' Move the plane left.
         '''
-
         if self.rect.left > 0:
             self.rect.left -= self._speed
         else:
@@ -31,7 +30,6 @@ class PlayerPlane(Plane):
     def _move_right(self):
         ''' Move the plane right.
         '''
-
         if self.rect.right < self._background_width:
             self.rect.left += self._speed
         else:
@@ -40,7 +38,6 @@ class PlayerPlane(Plane):
     def _move_up(self):
         ''' Move the plane up.
         '''
-
         if self.rect.top > 0:
             self.rect.top -= self._speed
         else:
@@ -49,7 +46,6 @@ class PlayerPlane(Plane):
     def _move_down(self):
         ''' Move the plane down.
         '''
-
         if self.rect.bottom < self._background_height:
             self.rect.top += self._speed
         else:
@@ -58,7 +54,6 @@ class PlayerPlane(Plane):
     def _fire_laser(self):
         ''' Create Laser instance and make it available to draw.
         '''
-
         laser_speed = 15
         if self._power == 0:
             laser_damage = 1
@@ -87,28 +82,41 @@ class PlayerPlane(Plane):
                           self._lasers[-1],
                           positions[i],
                           laser_size)
-            for gp in self._groups:
+            for gp in self._laser_groups:
                 gp.add(laser)
 
-    def __init__(self, background_size, image, explosion_images, lasers, groups, blood, hit_damage, models, size=None):
+    def _display_shield(self):
+        shield = Shield((self._background_width, self._background_height),
+                        self._shields[0],
+                        self.rect,
+                        None)
+        for gp in self._shield_groups:
+            gp.add(shield)
+
+    def __init__(self, background_size, image, explosion_images, lasers, laser_groups, shields, shield_groups, blood, hit_damage, models, size=None):
         ''' Initialize a player plane.
         '''
 
-        super().__init__(background_size, image, explosion_images, lasers, groups, blood, hit_damage, size)
+        super().__init__(background_size, image, explosion_images, lasers, laser_groups, blood, hit_damage, size)
         self._speed = 10
         self._fire_laser_delay = 100
         self._power_limit = 2
         self._level_limit = 2
         self._models = [pygame.transform.smoothscale(model, size) for model in models] if size is not None else models
+        self._shields = shields
+        self._shield_groups = shield_groups
+        self._protected = False
 
         self._reset_location()
 
     def update(self):
-        ''' Listen continuous key operations (e.g. directions)...
         '''
-
+        '''
         if self._blood <= 0:
             self._killed = True
+
+        if self._protected:
+            self._display_shield()
 
         if not self._killed:
             keys_pressed = pygame.key.get_pressed()  # A list of bools of each key.
@@ -130,6 +138,12 @@ class PlayerPlane(Plane):
                     self._fire_laser_delay = 100
         else:
             self._explode()
+
+    def is_protected(self):
+        return self._protected
+
+    def set_protected(self):
+        self._protected = True
 
     def power_up(self):
         if self._power < self._power_limit:

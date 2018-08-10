@@ -51,9 +51,9 @@ UFO_HIT_DAMAGE = 4
 
 
 # Quantities.
-N_FIRST_TIER_ENEMIES = 5
-N_SECOND_TIER_ENEMIES = 3
-N_UFOS = 2
+N_FIRST_TIER_ENEMIES = 1
+N_SECOND_TIER_ENEMIES = 1
+N_UFOS = 1
 
 # Converted images/surfaces
 IMAGES = {
@@ -106,22 +106,27 @@ IMAGES = {
     },
     'lasers': {
         'player': [
-            pygame.image.load('images/lasers/laserRed01.png').convert_alpha(),
-            pygame.image.load('images/lasers/laserRed04.png').convert_alpha(),
-            pygame.image.load('images/lasers/laserRed09.png').convert_alpha(),
-            pygame.image.load('images/lasers/laserRedShot.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserRed01.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserRed04.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserRed09.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserRedShot.png').convert_alpha(),
         ],
         'first_tier_enemy': [
-            pygame.image.load('images/lasers/laserBlue09.png').convert_alpha(),
-            pygame.image.load('images/lasers/laserBlue08.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserBlue09.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserBlue08.png').convert_alpha(),
         ],
         'second_tier_enemy': [
-            pygame.image.load('images/lasers/laserBlue13.png').convert_alpha(),
-            pygame.image.load('images/lasers/laserBlue08.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserBlue13.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserBlue08.png').convert_alpha(),
         ],
         'ufo': [
-            pygame.image.load('images/lasers/laserBlue15.png').convert_alpha(),
-            pygame.image.load('images/lasers/laserBlue08.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserBlue15.png').convert_alpha(),
+            pygame.image.load('images/weapons/laserBlue08.png').convert_alpha(),
+        ],
+    },
+    'protections': {
+        'player': [
+            pygame.image.load('images/weapons/shield3.png').convert_alpha(),
         ],
     },
     'powerups': {
@@ -161,11 +166,14 @@ lasers_gp = LaserGroup()
 first_tier_enemy_gp = pygame.sprite.Group()
 second_tier_enemy_gp = pygame.sprite.Group()
 ufo_gp = pygame.sprite.Group()
+shields_gp = pygame.sprite.GroupSingle()
+
 player_lasers_gp = pygame.sprite.Group()
 enemy_lasers_gp = pygame.sprite.Group()
+
 powerups_gp = pygame.sprite.Group()
 stars_gp = pygame.sprite.Group()
-shields_gp = pygame.sprite.Group()
+shield_supplies_gp = pygame.sprite.Group()
 pills_gp = pygame.sprite.Group()
 
 player = PlayerPlane(SCREEN_SIZE,
@@ -173,6 +181,8 @@ player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['explosions']['player'],
                      IMAGES['lasers']['player'],
                      [player_lasers_gp, lasers_gp],
+                     IMAGES['protections']['player'],
+                     [shields_gp],
                      PLAYER_BLOOD,
                      PLAYER_HIT_DAMAGE,
                      IMAGES['players']['default'],
@@ -196,7 +206,7 @@ supplies_gp.add(powerup, star, shield, pill)
 explosive_gp.add(player)
 powerups_gp.add(powerup)
 stars_gp.add(star)
-shields_gp.add(shield)
+shield_supplies_gp.add(shield)
 pills_gp.add(pill)
 
 
@@ -289,10 +299,15 @@ def main():
             p.set_picked()
             player.blood_restore()
 
+        # Check collision between shield supplies and players...
+        collided_shields = pygame.sprite.spritecollide(player, shield_supplies_gp, False)
+        for sh in collided_shields:
+            sh.set_picked()
+            player.set_protected()
+
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, enemies_gp, False)
         if collided_enemies:
-            # player.set_killed()
             total_hit_damage = 0
             for e in collided_enemies:
                 total_hit_damage += e.get_hit_damage_value()
@@ -316,18 +331,30 @@ def main():
             total_damage += hit.get_damage_value()
         player.lose_blood(total_damage)
 
+        # Check collision between enemy laser / enemies and shield...
+        if player.is_protected() and shields_gp:
+            hitted_lasers = pygame.sprite.spritecollide(shields_gp.sprite,
+                                                        enemy_lasers_gp,
+                                                        False)
+            for hit in hitted_lasers:
+                hit.set_hitted()
+
+            collided_enemies = pygame.sprite.spritecollide(shields_gp.sprite, enemies_gp, False)
+            for e in collided_enemies:
+                e.set_killed()
+
         # Draw player plane.
         player_gp.update()
         player_gp.draw(screen)
 
         # Draw enemies.
-        # enemies_gp.update()
-        # enemies_gp.draw(screen)
+        enemies_gp.update()
+        enemies_gp.draw(screen)
         # first_tier_enemy_gp.update()
         # first_tier_enemy_gp.draw(screen)
 
-        second_tier_enemy_gp.update()
-        second_tier_enemy_gp.draw(screen)
+        # second_tier_enemy_gp.update()
+        # second_tier_enemy_gp.draw(screen)
 
         # ufo_gp.update()
         # ufo_gp.draw(screen)
@@ -335,6 +362,10 @@ def main():
         # Draw lasers.
         lasers_gp.update()
         lasers_gp.draw(screen)
+
+        # Draw shield.
+        shields_gp.update()
+        shields_gp.draw(screen)
 
         # Draw supplies.
         supplies_gp.update()
