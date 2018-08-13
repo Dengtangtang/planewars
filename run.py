@@ -58,12 +58,17 @@ SECOND_TIER_ENEMY_HIT_DAMAGE = 4
 UFO_HIT_DAMAGE = 4
 
 # Quantities.
-N_FIRST_TIER_ENEMIES = 1
-N_SECOND_TIER_ENEMIES = 1
-N_UFOS = 1
+N_FIRST_TIER_ENEMIES = 10
+N_SECOND_TIER_ENEMIES = 10
+N_UFOS = 10
 
 # Converted images/surfaces
 IMAGES = {
+    'main_menu': {
+        'default': [
+            pygame.image.load('images/menu/main.png').convert_alpha(),
+        ]
+    },
     'backgrounds': {
         'default': [
             pygame.image.load('images/backgrounds/starfield.png').convert_alpha(),
@@ -164,13 +169,22 @@ background = pygame.transform.smoothscale(IMAGES['backgrounds']['default'][0],
                                           BACKGROUND_SIZE)
 
 # Create sprites/groups.
+# Lists for each kind of enemy.
+first_tier_enemy_list = []
+second_tier_enemy_list = []
+ufo_list = []
+pill_list = []
+star_list = []
+shield_supply_list = []
+powerup_list = []
+
 # General groups.
 explosive_gp = ExplosionGroup()
 supplies_gp = pygame.sprite.Group()
 player_gp = pygame.sprite.GroupSingle()
 enemies_gp = pygame.sprite.Group()
 lasers_gp = LaserGroup()
-shields_gp = pygame.sprite.GroupSingle()
+protection_gp = pygame.sprite.GroupSingle()
 
 # Specific groups
 first_tier_enemy_gp = pygame.sprite.Group()
@@ -180,7 +194,7 @@ player_lasers_gp = pygame.sprite.Group()
 enemy_lasers_gp = pygame.sprite.Group()
 powerups_gp = pygame.sprite.Group()
 stars_gp = pygame.sprite.Group()
-shield_supplies_gp = pygame.sprite.Group()
+shields_gp = pygame.sprite.Group()
 pills_gp = pygame.sprite.Group()
 
 # Sprites.
@@ -190,7 +204,7 @@ player = PlayerPlane(SCREEN_SIZE,
                      IMAGES['lasers']['player'],
                      [player_lasers_gp, lasers_gp],
                      IMAGES['protections']['player'],
-                     [shields_gp],
+                     [protection_gp],
                      PLAYER_BLOOD,
                      PLAYER_HIT_DAMAGE,
                      IMAGES['players']['default'],
@@ -253,7 +267,7 @@ for i in range(N_UFOS):
 player.add(player_gp, explosive_gp)
 powerup.add(supplies_gp, powerups_gp)
 star.add(supplies_gp, stars_gp)
-shield.add(supplies_gp, shield_supplies_gp)
+shield.add(supplies_gp, shields_gp)
 pill.add(supplies_gp, pills_gp)
 
 
@@ -265,16 +279,46 @@ def draw_text(surf, text, size, x, y):
     surf.blit(text_surface, text_rect)
 
 
+def draw_menu():
+    global screen
+
+    menu = IMAGES['main_menu']['default'][0]
+    menu = pygame.transform.smoothscale(menu, SCREEN_SIZE)
+
+    while True:
+        clock.tick(FPS)
+
+        event = pygame.event.poll()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                return True
+            elif event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                exit()
+        elif event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+
+        screen.blit(menu, (0, 0))
+        draw_text(screen, "Press [ENTER] To Begin", 30, WIDTH // 2, HEIGHT // 2)
+        draw_text(screen, "or [ESC] To Quit", 30, WIDTH // 2, (HEIGHT // 2) + 40)
+
+        pygame.display.flip()
+
+
 def main():
 
     global screen
     global background, background_y
     score = 0
-    shielding_timer = 4000  # 4 seconds.
-    running = True  # Bool value to control if game is running.
+    shielding_timer = 4  # 4 seconds.
+    tt = 0  # Total time.
 
-    while running:
-        dt = clock.tick(FPS)
+    run = draw_menu()
+
+    while run:
+        dt = clock.tick(FPS) / 1000
+        tt += dt
 
         # Running the game...
         for event in pygame.event.get():
@@ -302,9 +346,9 @@ def main():
                 player.level_up()
             elif supp in pills_gp:
                 player.blood_restore()
-            elif supp in shield_supplies_gp:
+            elif supp in shields_gp:
                 player.set_protected()
-                shielding_timer = 4000
+                shielding_timer = 4
 
         # Check collision between player and enemies...
         collided_enemies = pygame.sprite.spritecollide(player, enemies_gp, False)
@@ -331,36 +375,37 @@ def main():
             damages += hit.get_damage_value()
         player.lose_blood(damages)
 
-        if player.is_protected() and shields_gp:
+        if player.is_protected() and protection_gp:
             # Check collision between enemy laser and shield...
-            hitted_lasers = pygame.sprite.spritecollide(shields_gp.sprite, enemy_lasers_gp, False)
+            hitted_lasers = pygame.sprite.spritecollide(protection_gp.sprite, enemy_lasers_gp, False)
             for hit in hitted_lasers:
                 hit.set_hitted()
 
             # Check collision between enemies and shield...
-            collided_enemies = pygame.sprite.spritecollide(shields_gp.sprite, enemies_gp, False)
+            collided_enemies = pygame.sprite.spritecollide(protection_gp.sprite, enemies_gp, False)
             for e in collided_enemies:
                 e.set_killed()
 
-            # Counting down for shielding...
+            # Counting down time limit for shielding...
             shielding_timer -= dt
             if shielding_timer <= 0:
                 player.set_protected(False)
-                shields_gp.empty()
-                shielding_timer = 4000
+                protection_gp.empty()
+                shielding_timer = 4
 
         # Draw player plane.
         player_gp.update()
         player_gp.draw(screen)
 
         # Draw enemies.
-        enemies_gp.update()
-        enemies_gp.draw(screen)
-        # first_tier_enemy_gp.update()
-        # first_tier_enemy_gp.draw(screen)
+        # enemies_gp.update()
+        # enemies_gp.draw(screen)
 
-        # second_tier_enemy_gp.update()
-        # second_tier_enemy_gp.draw(screen)
+        first_tier_enemy_gp.update()
+        first_tier_enemy_gp.draw(screen)
+
+        second_tier_enemy_gp.update()
+        second_tier_enemy_gp.draw(screen)
 
         # ufo_gp.update()
         # ufo_gp.draw(screen)
@@ -370,8 +415,8 @@ def main():
         lasers_gp.draw(screen)
 
         # Draw shield.
-        shields_gp.update()
-        shields_gp.draw(screen)
+        protection_gp.update()
+        protection_gp.draw(screen)
 
         # Draw supplies.
         supplies_gp.update()

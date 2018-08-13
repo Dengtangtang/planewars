@@ -66,6 +66,7 @@ class FlyingExplosiveObject(FlyingObject):
             self._explosion_counter = 0
 
         # Set hit damage to zero when explosion, or the explosion will hurt the plane.
+        # IT IS WIRED!!!!!
         self._hit_damage = 0
 
     def __init__(self, background_size, image, explosion_images, blood, hit_damage, size=None):
