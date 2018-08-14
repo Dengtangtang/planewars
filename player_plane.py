@@ -12,7 +12,7 @@ class Player(Plane):
     '''
     '''
 
-    _fire_delay_factor = 3
+    _fire_delay_factor = 4
 
     def _reset(self):
         super()._reset()
@@ -77,10 +77,10 @@ class Player(Plane):
     def _fire(self):
         if self._power == 0:
             self._laser_damage = 1
-            self._laser_size = (9, 30)
+            self._laser_size = (12, 30)
         elif self._power == 1:
             self._laser_damage = 2
-            self._laser_size = (10, 30)
+            self._laser_size = (15, 30)
         elif self._power == 2:
             self._laser_damage = 3
             self._laser_size = (18, 18)
@@ -152,6 +152,7 @@ class Player(Plane):
         if self._level < self._level_limit:
             self._level += 1
         self.image = self._models[self._level]
+        self._blood = self._origin_blood
 
     def blood_up(self):
         self._blood += 3

@@ -43,9 +43,7 @@ class Enemy(Plane):
 
     def __init__(self, screen_size, image, lasers, laser_groups, size=None):
         super().__init__(screen_size, image, lasers, laser_groups, size)
-
-        # Init.
-        self._reset()
+        self._strike = 2  # May be overwritten subclass objects.
 
     def get_score(self):
         return self._score
@@ -57,15 +55,17 @@ class ElementaryEnemy(Enemy):
 
     def __init__(self, screen_size, image, lasers, laser_groups, size=None):
         super().__init__(screen_size, image, lasers, laser_groups, size)
-        self._score = 200
+        self._score = 500
         self._speed = 7  # May be overwritten subclass objects.
         self._blood = 3  # May be overwritten subclass objects.
         self._origin_blood = self._blood  # May be overwritten subclass objects.
-        self._strike = 3  # May be overwritten subclass objects.
         self._laser_speed = 10
         self._laser_damage = 1
         self._laser_size = (15, 15)
         self._fire_positions = ['center']
+
+        # Init.
+        self._reset()
 
 
 class MidEnemy(Enemy):
@@ -74,15 +74,17 @@ class MidEnemy(Enemy):
 
     def __init__(self, screen_size, image, lasers, laser_groups, size=None):
         super().__init__(screen_size, image, lasers, laser_groups, size)
-        self._score = 300
+        self._score = 1000
         self._speed = 6  # May be overwritten subclass objects.
         self._blood = 6  # May be overwritten subclass objects.
         self._origin_blood = self._blood  # May be overwritten subclass objects.
-        self._strike = 4  # May be overwritten subclass objects.
         self._laser_speed = 10
         self._laser_damage = 2
         self._laser_size = (9, 30)
         self._fire_positions = ['center']
+
+        # Init.
+        self._reset()
 
 
 class AdvancedEnemy(Enemy):
@@ -92,11 +94,10 @@ class AdvancedEnemy(Enemy):
 
     def __init__(self, screen_size, image, lasers, laser_groups, size=None):
         super().__init__(screen_size, image, lasers, laser_groups, size)
-        self._score = 500
+        self._score = 2000
         self._speed = 5  # May be overwritten subclass objects.
         self._blood = 12  # May be overwritten subclass objects.
         self._origin_blood = self._blood  # May be overwritten subclass objects.
-        self._strike = 5  # May be overwritten subclass objects.
         self._level = 1  # May be overwritten subclass objects.
         self._origin_level = self._level  # May be overwritten subclass objects.
         self._laser_speed = 10
@@ -104,20 +105,28 @@ class AdvancedEnemy(Enemy):
         self._laser_size = (9, 30)
         self._fire_positions = ['left', 'right']
 
+        # Init.
+        self._reset()
+
 
 class Meteor(Enemy):
 
-    def __init__(self, screen_size, image, lasers, laser_groups, size=None):
-        super().__init__(screen_size, image, lasers, laser_groups, size)
-        self._speed = 15
-        self._strike = 5
-        self._score = 100
-
-        dest = Vector2(randint(0, self._screen_width - self.rect.width), self._screen_height)
+    def _reset(self):
+        super()._reset()
+        dest = Vector2(randint(-50, self._screen_width + 50), self._screen_height)
         source = Vector2(self.rect.left, self.rect.top)
         dist = source.distance_to(dest)
         self._speedx = (dest[0] - source[0]) / dist * self._speed
         self._speedy = (dest[1] - source[1]) / dist * self._speed
+
+    def __init__(self, screen_size, image, lasers, laser_groups, size=None):
+        super().__init__(screen_size, image, lasers, laser_groups, size)
+        self._speed = 20
+        self._strike = 1
+        self._score = 10
+
+        # Init.
+        self._reset()
 
     def _update_when_not_killed_hook(self):
 
