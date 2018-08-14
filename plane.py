@@ -1,27 +1,32 @@
-''' Define base Plane class.
+''' Define ABC Plane class for Player and Enemy.
 '''
 
-from flying_object import FlyingExplosiveObject
+from flying_object import FlyingObject
 
 
-class Plane(FlyingExplosiveObject):
+class Plane(FlyingObject):
 
-    def _reset_location(self):
-        raise NotImplementedError('define specific _reset_location')
+    _fire_delay_factor = 50  # May be overwritten subclass objects.
 
-    def _reset_after_explosion(self):
-        ''' Overwrite this method.
-        '''
+    def _fire_process(self):
+        if not (self._fire_delay % self._fire_delay_factor):
+            self._fire()
+        self._fire_delay -= 1
+        if self._fire_delay <= 0:
+            self._fire_delay = 500
 
-        super()._reset_after_explosion()
-        self._power = self._origin_power
-        self._level = self._origin_level
+    def _fire(self):
+        raise NotImplementedError('Plz define _fire in subclass')
 
-    def __init__(self, background_size, image, explosion_images, lasers, laser_groups, blood, hit_damage, size=None):
-        super().__init__(background_size, image, explosion_images, blood, hit_damage, size)
-        self._power = 0
-        self._level = 0
-        self._origin_level = self._level
-        self._origin_power = self._power
+    def __init__(self, screen_size, image, lasers, laser_groups, size=None):
+        super().__init__(screen_size, image, size)
+        self._power = 0  # May be overwritten subclass objects.
+        self._level = 0  # May be overwritten subclass objects.
+        self._origin_level = self._level  # May be overwritten subclass objects.
+        self._origin_power = self._power  # May be overwritten subclass objects.
         self._lasers = lasers
         self._laser_groups = laser_groups
+        self._laser_speed = 15
+        self._laser_damage = 1
+        self._laser_size = (9, 30)
+        self._fire_delay = 500  # May be overwritten subclass objects.

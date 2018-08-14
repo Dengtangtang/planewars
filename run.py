@@ -1,278 +1,151 @@
-''' A plane war demo.
+''' A plane wars game demo.
 
 '''
 
-
 import sys
+import os
 import pygame
 from pygame.locals import *
-from player_plane import PlayerPlane
-from enemy_plane import FirstTierEnemyPlane, SecondTierEnemyPlane, UFO
+from player_plane import Player
+from enemy_plane import ElementaryEnemy, MidEnemy, AdvancedEnemy, Meteor
 from supply import Supply
-from my_group import ExplosionGroup, LaserGroup
+from explosion import Explosion
+# from my_group import ExplosionGroup, LaserGroup
 
-# Initialize all modules.
+# ------------------------- Initialize game -------------------------
 pygame.init()
-
-SCREEN_SIZE = WIDTH, HEIGHT = 600, 800  # Screen size.
-screen = pygame.display.set_mode(SCREEN_SIZE)  # Screen.
+screen_size = width, height = 600, 800  # Screen size.
+screen = pygame.display.set_mode(screen_size)  # Screen.
 pygame.display.set_caption('Plane War Demo')  # Caption.
 clock = pygame.time.Clock()  # Clock.
 
-# Sizes.
-BACKGROUND_SIZE = BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 800
-BLOOD_STRIP_SIZE = BLOOD_STRIP_WIDTH, BLOOD_STRIP_HEIGHT = 3, 15
-BLOOD_STRIP_GAP = 10
-PLAYER_SIZE = (60, 45)
-FIRST_TIER_ENEMY_SIZE = (55, 50)
-SECOND_TIER_ENEMY_SIZE = (55, 50)
-UFO_SIZE = (60, 60)
-BOLT_SIZE = (15, 24)
-STAR_SIZE = PILL_SIZE = SHIELD_SIZE = (20, 20)
-
-# Colors.
+# ------------------------- Set colors -------------------------
 GREEN = (14, 242, 44)
 WHITE = (255, 255, 255)
 
-# FPS.
-FPS = 60
+# ------------------------- Set image dirs and loaded images -------------------------
+BACKGROUND_DIR = os.path.join('images', 'backgrounds')
+ENEMY_DIR = os.path.join('images', 'enemies')
+EXPLOSION_DIR = os.path.join('images', 'explosions')
+MENU_DIR = os.path.join('images', 'menu')
+PLAYER_DIR = os.path.join('images', 'players')
+SUPPLY_DIR = os.path.join('images', 'supplies')
+WEAPON_DIR = os.path.join('images', 'weapons')
 
-# Font.
-FONTFILE = pygame.font.match_font('arial')
-
-# Bloods.
-PLAYER_BLOOD = 10
-FIRST_TIER_ENEMY_BLOOD = 5
-SECOND_TIER_ENEMY_BLOOD = 8
-UFO_BLOOD = 15
-
-# Scores.
-FIRST_TIER_ENEMY_SCORE = 200
-SECOND_TIER_ENEMY_SCORE = 300
-UFO_SCORE = 500
-
-# Hit damages.
-PLAYER_HIT_DAMAGE = 0
-FIRST_TIER_ENEMY_HIT_DAMAGE = 4
-SECOND_TIER_ENEMY_HIT_DAMAGE = 4
-UFO_HIT_DAMAGE = 4
-
-# Quantities.
-N_FIRST_TIER_ENEMIES = 10
-N_SECOND_TIER_ENEMIES = 10
-N_UFOS = 10
-
-# Converted images/surfaces
 IMAGES = {
-    'main_menu': {
-        'default': [
-            pygame.image.load('images/menu/main.png').convert_alpha(),
-        ]
-    },
-    'backgrounds': {
-        'default': [
-            pygame.image.load('images/backgrounds/starfield.png').convert_alpha(),
-        ],
-    },
-    'players': {
-        'default': [
-            pygame.image.load('images/players/playerShip1_red.png').convert_alpha(),
-            pygame.image.load('images/players/playerShip2_red.png').convert_alpha(),
-            pygame.image.load('images/players/playerShip3_red.png').convert_alpha(),
-        ],
-    },
-    'enemies': {
-        'first_tier_enemy': [
-            pygame.image.load('images/enemies/enemyBlue3.png').convert_alpha(),
-        ],
-        'second_tier_enemy': [
-            pygame.image.load('images/enemies/enemyBlue4.png').convert_alpha(),
-        ],
-        'ufo': [
-            pygame.image.load('images/enemies/ufoBlue.png').convert_alpha(),
-        ],
-    },
-    'explosions': {
-        'default': [
-            pygame.image.load('images/damages/regularExplosion00.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion01.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion02.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion03.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion04.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion05.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion06.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion07.png').convert_alpha(),
-            pygame.image.load('images/damages/regularExplosion08.png').convert_alpha(),
-        ],
-        'player': [
-            pygame.image.load('images/damages/sonicExplosion00.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion01.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion02.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion03.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion04.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion05.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion06.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion07.png').convert_alpha(),
-            pygame.image.load('images/damages/sonicExplosion08.png').convert_alpha(),
-        ]
-    },
-    'lasers': {
-        'player': [
-            pygame.image.load('images/weapons/laserRed01.png').convert_alpha(),
-            pygame.image.load('images/weapons/laserRed04.png').convert_alpha(),
-            pygame.image.load('images/weapons/laserRed09.png').convert_alpha(),
-            pygame.image.load('images/weapons/laserRedShot.png').convert_alpha(),
-        ],
-        'first_tier_enemy': [
-            pygame.image.load('images/weapons/laserBlue09.png').convert_alpha(),
-            pygame.image.load('images/weapons/laserBlue08.png').convert_alpha(),
-        ],
-        'second_tier_enemy': [
-            pygame.image.load('images/weapons/laserBlue13.png').convert_alpha(),
-            pygame.image.load('images/weapons/laserBlue08.png').convert_alpha(),
-        ],
-        'ufo': [
-            pygame.image.load('images/weapons/laserBlue15.png').convert_alpha(),
-            pygame.image.load('images/weapons/laserBlue08.png').convert_alpha(),
-        ],
-    },
-    'protections': {
-        'player': [
-            pygame.image.load('images/weapons/shield3.png').convert_alpha(),
-        ],
-    },
-    'powerups': {
-        'default': [
-            pygame.image.load('images/supplies/bolt_gold.png').convert_alpha(),
-        ],
-    },
-    'stars': {
-        'default': [
-            pygame.image.load('images/supplies/star_gold.png').convert_alpha(),
-        ],
-    },
-    'pills': {
-        'default': [
-            pygame.image.load('images/supplies/pill_green.png').convert_alpha(),
-        ],
-    },
-    'shields': {
-        'default': [
-            pygame.image.load('images/supplies/shield_gold.png').convert_alpha(),
-        ],
-    },
+    'backgrounds': [
+        pygame.image.load(BACKGROUND_DIR + '/starfield.png').convert_alpha(),
+    ],
+    'elementary_enemies': [
+        pygame.image.load(ENEMY_DIR + '/enemyBlue3.png').convert_alpha(),
+    ],
+    'mid_enemies': [
+        pygame.image.load(ENEMY_DIR + '/enemyBlue4.png').convert_alpha(),
+    ],
+    'advanced_enemies': [
+        pygame.image.load(ENEMY_DIR + '/ufoBlue.png').convert_alpha(),
+    ],
+    'tiny_meteors': [
+        pygame.image.load(ENEMY_DIR + '/meteorBrown_tiny2.png').convert_alpha(),
+    ],
+    'small_meteors': [
+        pygame.image.load(ENEMY_DIR + '/meteorBrown_small2.png').convert_alpha(),
+    ],
+    'med_meteors': [
+        pygame.image.load(ENEMY_DIR + '/meteorBrown_med3.png').convert_alpha(),
+    ],
+    'big_meteors': [
+        pygame.image.load(ENEMY_DIR + '/meteorBrown_big2.png').convert_alpha(),
+    ],
+    'menu': [
+        pygame.image.load(MENU_DIR + '/main.png').convert_alpha(),
+    ],
+    'enemy_explosions': [
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion00.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion01.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion02.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion03.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion04.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion05.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion06.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion07.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/regularExplosion08.png').convert_alpha(),
+    ],
+    'player_explosions': [
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion00.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion01.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion02.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion03.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion04.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion05.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion06.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion07.png').convert_alpha(),
+        pygame.image.load(EXPLOSION_DIR + '/sonicExplosion08.png').convert_alpha(),
+    ],
+    'players': [
+        pygame.image.load(PLAYER_DIR + '/playerShip1_red.png').convert_alpha(),
+        pygame.image.load(PLAYER_DIR + '/playerShip2_red.png').convert_alpha(),
+        pygame.image.load(PLAYER_DIR + '/playerShip3_red.png').convert_alpha(),
+    ],
+    'player_lasers': [
+        pygame.image.load(WEAPON_DIR + '/laserRed01.png').convert_alpha(),
+        pygame.image.load(WEAPON_DIR + '/laserRed04.png').convert_alpha(),
+        pygame.image.load(WEAPON_DIR + '/laserRed09.png').convert_alpha(),
+    ],
+    'player_lasers_shot': [
+        pygame.image.load(WEAPON_DIR + '/laserRedShot.png').convert_alpha(),
+    ],
+    'elementary_enemy_lasers': [
+        pygame.image.load(WEAPON_DIR + '/laserBlue09.png').convert_alpha(),
+    ],
+    'mid_enemy_lasers': [
+        pygame.image.load(WEAPON_DIR + '/laserBlue13.png').convert_alpha(),
+    ],
+    'advanced_enemy_lasers': [
+        pygame.image.load(WEAPON_DIR + '/laserBlue15.png').convert_alpha(),
+    ],
+    'enemy_lasers_shot': [
+        pygame.image.load(WEAPON_DIR + '/laserBlueShot.png').convert_alpha(),
+    ],
+    'protections': [
+        pygame.image.load(WEAPON_DIR + '/shield3.png').convert_alpha(),
+    ],
+    'shields': [
+        pygame.image.load(SUPPLY_DIR + '/shield_gold.png').convert_alpha(),
+    ],
+    'powerups': [
+        pygame.image.load(SUPPLY_DIR + '/bolt_gold.png').convert_alpha(),
+    ],
+    'stars': [
+        pygame.image.load(SUPPLY_DIR + '/star_gold.png').convert_alpha(),
+    ],
+    'pills': [
+        pygame.image.load(SUPPLY_DIR + '/pill_green.png').convert_alpha(),
+    ],
 }
 
-# Define background 'Surface'.
-background_y = 0
-background = pygame.transform.smoothscale(IMAGES['backgrounds']['default'][0],
-                                          BACKGROUND_SIZE)
+# ------------------------- Set sizes -------------------------
+background_size = background_width, background_height = 600, 800
+blood_strip_size = blood_strip_width, blood_strip_height = 3, 15
+blood_strip_gap = 10
+player_size = (60, 45)
+elementary_enemy_size = (55, 50)
+mid_enemy_size = (55, 50)
+advanced_enemy_size = (60, 60)
+bolt_size = (15, 24)
+star_size = pill_size = shield_size = (20, 20)
+palyer_laser_shot_size = (40, 40)
+enemy_laser_shot_size = (20, 20)
 
-# Create sprites/groups.
-# Lists for each kind of enemy.
-first_tier_enemy_list = []
-second_tier_enemy_list = []
-ufo_list = []
-pill_list = []
-star_list = []
-shield_supply_list = []
-powerup_list = []
+# ------------------------- Set fps -------------------------
+fps = 60
 
-# General groups.
-explosive_gp = ExplosionGroup()
-supplies_gp = pygame.sprite.Group()
-player_gp = pygame.sprite.GroupSingle()
-enemies_gp = pygame.sprite.Group()
-lasers_gp = LaserGroup()
-protection_gp = pygame.sprite.GroupSingle()
-
-# Specific groups
-first_tier_enemy_gp = pygame.sprite.Group()
-second_tier_enemy_gp = pygame.sprite.Group()
-ufo_gp = pygame.sprite.Group()
-player_lasers_gp = pygame.sprite.Group()
-enemy_lasers_gp = pygame.sprite.Group()
-powerups_gp = pygame.sprite.Group()
-stars_gp = pygame.sprite.Group()
-shields_gp = pygame.sprite.Group()
-pills_gp = pygame.sprite.Group()
-
-# Sprites.
-player = PlayerPlane(SCREEN_SIZE,
-                     IMAGES['players']['default'][0],
-                     IMAGES['explosions']['player'],
-                     IMAGES['lasers']['player'],
-                     [player_lasers_gp, lasers_gp],
-                     IMAGES['protections']['player'],
-                     [protection_gp],
-                     PLAYER_BLOOD,
-                     PLAYER_HIT_DAMAGE,
-                     IMAGES['players']['default'],
-                     PLAYER_SIZE)
-powerup = Supply(SCREEN_SIZE,
-                 IMAGES['powerups']['default'][0],
-                 BOLT_SIZE)
-star = Supply(SCREEN_SIZE,
-              IMAGES['stars']['default'][0],
-              STAR_SIZE)
-shield = Supply(SCREEN_SIZE,
-                IMAGES['shields']['default'][0],
-                SHIELD_SIZE)
-pill = Supply(SCREEN_SIZE,
-              IMAGES['pills']['default'][0],
-              PILL_SIZE)
-
-for i in range(N_FIRST_TIER_ENEMIES):
-    first_tier_enemy = FirstTierEnemyPlane(SCREEN_SIZE,
-                                           IMAGES['enemies']['first_tier_enemy'][0],
-                                           IMAGES['explosions']['default'],
-                                           IMAGES['lasers']['first_tier_enemy'],
-                                           [enemy_lasers_gp, lasers_gp],
-                                           FIRST_TIER_ENEMY_BLOOD,
-                                           FIRST_TIER_ENEMY_HIT_DAMAGE,
-                                           FIRST_TIER_ENEMY_SCORE,
-                                           FIRST_TIER_ENEMY_SIZE)
-    first_tier_enemy.add(first_tier_enemy_gp,
-                         enemies_gp,
-                         explosive_gp)
-
-for i in range(N_SECOND_TIER_ENEMIES):
-    second_tier_enemy = SecondTierEnemyPlane(SCREEN_SIZE,
-                                             IMAGES['enemies']['second_tier_enemy'][0],
-                                             IMAGES['explosions']['default'],
-                                             IMAGES['lasers']['second_tier_enemy'],
-                                             [enemy_lasers_gp, lasers_gp],
-                                             SECOND_TIER_ENEMY_BLOOD,
-                                             SECOND_TIER_ENEMY_HIT_DAMAGE,
-                                             SECOND_TIER_ENEMY_SCORE,
-                                             SECOND_TIER_ENEMY_SIZE)
-    second_tier_enemy.add(second_tier_enemy_gp,
-                          enemies_gp,
-                          explosive_gp)
-
-for i in range(N_UFOS):
-    ufo = UFO(SCREEN_SIZE,
-              IMAGES['enemies']['ufo'][0],
-              IMAGES['explosions']['default'],
-              IMAGES['lasers']['ufo'],
-              [enemy_lasers_gp, lasers_gp],
-              UFO_BLOOD,
-              UFO_HIT_DAMAGE,
-              UFO_SCORE,
-              UFO_SIZE)
-    ufo.add(ufo_gp,
-            enemies_gp,
-            explosive_gp)
-
-player.add(player_gp, explosive_gp)
-powerup.add(supplies_gp, powerups_gp)
-star.add(supplies_gp, stars_gp)
-shield.add(supplies_gp, shields_gp)
-pill.add(supplies_gp, pills_gp)
+# ------------------------- Set font -------------------------
+font_file = pygame.font.match_font('arial')
 
 
 def draw_text(surf, text, size, x, y):
-    font = pygame.font.Font(FONTFILE, size)
+    font = pygame.font.Font(font_file, size)
     text_surface = font.render(text, True, WHITE)
     text_rect = text_surface.get_rect()
     text_rect.midtop = (x, y)
@@ -282,11 +155,11 @@ def draw_text(surf, text, size, x, y):
 def draw_menu():
     global screen
 
-    menu = IMAGES['main_menu']['default'][0]
-    menu = pygame.transform.smoothscale(menu, SCREEN_SIZE)
+    menu = IMAGES['menu'][0]
+    menu = pygame.transform.smoothscale(menu, screen_size)
 
     while True:
-        clock.tick(FPS)
+        clock.tick(fps)
 
         event = pygame.event.poll()
         if event.type == pygame.KEYDOWN:
@@ -300,146 +173,376 @@ def draw_menu():
             exit()
 
         screen.blit(menu, (0, 0))
-        draw_text(screen, "Press [ENTER] To Begin", 30, WIDTH // 2, HEIGHT // 2)
-        draw_text(screen, "or [ESC] To Quit", 30, WIDTH // 2, (HEIGHT // 2) + 40)
+        draw_text(screen, "Press [ENTER] To Begin", 30, width // 2, height // 2)
+        draw_text(screen, "or [ESC] To Quit", 30, width // 2, (height // 2) + 40)
 
         pygame.display.flip()
 
 
+def draw_backgrounds(background, background_y):
+    global screen
+
+    rel_background_y = -(background_y % background.get_rect().height)
+    screen.blit(background, (0, rel_background_y + background.get_rect().height))
+    screen.blit(background, (0, rel_background_y))
+    background_y -= 1
+    if background_y == -background.get_rect().height:
+        background_y = 0
+    return background_y
+
+
+def create_sprites(num, groups, cls, *args, lst=None):
+    for i in range(num):
+        sprite = cls(*args)
+        if lst is not None:
+            lst.append(sprite)
+        sprite.add(*groups)
+
+
 def main():
 
+    # Global vars.
     global screen
-    global background, background_y
-    score = 0
-    shielding_timer = 4  # 4 seconds.
+
+    # Configs.
+    n_players = 1
+    n_elementary_enemies = 0
+    n_mid_enemies = 0
+    n_advanced_enemies = 0
+    n_big_meteors = 5
+    n_stars = n_pills = n_shields = n_bolts = 1
+    score = 0  # Scores player get.
+    shield_timer = 4  # The time limit for shielding is 4 seconds.
     tt = 0  # Total time.
 
-    run = draw_menu()
+    # Create groups.
+    all_collided_objects_g = pygame.sprite.Group()
 
-    while run:
-        dt = clock.tick(FPS) / 1000
+    players_g = pygame.sprite.GroupSingle()
+    protection_g = pygame.sprite.GroupSingle()
+
+    enemies_g = pygame.sprite.Group()
+    elementary_enemies_g = pygame.sprite.Group()
+    mid_enemies_g = pygame.sprite.Group()
+    advanced_enemies_g = pygame.sprite.Group()
+    meteors_g = pygame.sprite.Group()
+
+    supplies_g = pygame.sprite.Group()
+    pills_g = pygame.sprite.Group()
+    stars_g = pygame.sprite.Group()
+    shields_g = pygame.sprite.Group()
+    bolts_g = pygame.sprite.Group()
+
+    lasers_g = pygame.sprite.Group()
+    player_lasers_g = pygame.sprite.Group()
+    enemy_lasers_g = pygame.sprite.Group()
+
+    explosions_g = pygame.sprite.Group()
+
+    # Create background 'Surface'.
+    background_y = 0
+    background = pygame.transform.smoothscale(IMAGES['backgrounds'][0], background_size)
+
+    # Create player.
+    player_args = (
+        screen_size,
+        IMAGES['players'][0],
+        IMAGES['player_lasers'],
+        (player_lasers_g, lasers_g),
+        IMAGES['protections'],
+        (protection_g,),
+        IMAGES['players'],
+        player_size,
+    )
+    create_sprites(n_players, (players_g,), Player, *player_args, lst=None)
+    player = players_g.sprite
+
+    # Create enemies.
+    elementary_enemy_args = (
+        screen_size,
+        IMAGES['elementary_enemies'][0],
+        IMAGES['elementary_enemy_lasers'],
+        (enemy_lasers_g, lasers_g),
+        elementary_enemy_size,
+    )
+    mid_enemy_args = (
+        screen_size,
+        IMAGES['mid_enemies'][0],
+        IMAGES['mid_enemy_lasers'],
+        (enemy_lasers_g, lasers_g),
+        mid_enemy_size,
+    )
+    advanced_enemy_args = (
+        screen_size,
+        IMAGES['advanced_enemies'][0],
+        IMAGES['advanced_enemy_lasers'],
+        (enemy_lasers_g, lasers_g),
+        advanced_enemy_size,
+    )
+    big_meteor_args = (
+        screen_size,
+        IMAGES['big_meteors'][0],
+        [],
+        (),
+        advanced_enemy_size,
+    )
+    create_sprites(
+        n_elementary_enemies,
+        (elementary_enemies_g, enemies_g, all_collided_objects_g),
+        ElementaryEnemy,
+        *elementary_enemy_args,
+        lst=None,
+    )
+    create_sprites(
+        n_mid_enemies,
+        (mid_enemies_g, enemies_g, all_collided_objects_g),
+        MidEnemy,
+        *mid_enemy_args,
+        lst=None,
+    )
+    create_sprites(
+        n_advanced_enemies,
+        (advanced_enemies_g, enemies_g, all_collided_objects_g),
+        AdvancedEnemy,
+        *advanced_enemy_args,
+        lst=None,
+    )
+    create_sprites(
+        n_big_meteors,
+        (meteors_g, enemies_g, all_collided_objects_g),
+        Meteor,
+        *big_meteor_args,
+        lst=None,
+    )
+
+    # Draw supplies.
+    star_args = (screen_size, IMAGES['stars'][0], star_size)
+    bolt_args = (screen_size, IMAGES['powerups'][0], bolt_size)
+    shield_args = (screen_size, IMAGES['shields'][0], shield_size)
+    pill_args = (screen_size, IMAGES['pills'][0], pill_size)
+    create_sprites(
+        n_stars,
+        (stars_g, supplies_g, all_collided_objects_g),
+        Supply,
+        *star_args,
+        lst=None,
+    )
+    create_sprites(
+        n_bolts,
+        (bolts_g, supplies_g, all_collided_objects_g),
+        Supply,
+        *bolt_args,
+        lst=None,
+    )
+    create_sprites(
+        n_shields,
+        (shields_g, supplies_g, all_collided_objects_g),
+        Supply,
+        *shield_args,
+        lst=None,
+    )
+    create_sprites(
+        n_pills,
+        (pills_g, supplies_g, all_collided_objects_g),
+        Supply,
+        *pill_args,
+        lst=None
+    )
+
+    # Draw entry menu.
+    # run = draw_menu()
+
+    while True:
+        dt = clock.tick(fps) / 1000  # Delta time between current and last tick.
         tt += dt
 
-        # Running the game...
         for event in pygame.event.get():
-            # Listen events...
-            if event.type == QUIT:
+            if event.type == QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 pygame.quit()
                 sys.exit()
 
         # Draw moving background.
-        rel_background_y = -(background_y % background.get_rect().height)
-        screen.blit(background, (0, rel_background_y + background.get_rect().height))
-        screen.blit(background, (0, rel_background_y))
-        background_y -= 1
-        if background_y == -background.get_rect().height:
-            background_y = 0
+        background_y = draw_backgrounds(background, background_y)
 
-        # Check collision...
-        # Check collision between supplies and players...
-        collided_supplies = pygame.sprite.spritecollide(player, supplies_gp, False)
-        for supp in collided_supplies:
-            supp.set_picked()
-            if supp in powerups_gp:
+        # Check collision.
+        # Check collision between player and other objects.
+        collides = pygame.sprite.spritecollide(player, all_collided_objects_g, False)
+        player_strike_damage = player.damage()
+        for colli in collides:
+            colli.lose_blood(player_strike_damage)
+            if colli.get_blood() <= 0:
+                colli.set_killed()
+            if colli in bolts_g:
                 player.power_up()
-            elif supp in stars_gp:
+            elif colli in stars_g:
                 player.level_up()
-            elif supp in pills_gp:
-                player.blood_restore()
-            elif supp in shields_gp:
+            elif colli in pills_g:
+                player.blood_up()
+            elif colli in shields_g:
                 player.set_protected()
-                shielding_timer = 4
+                shield_timer = 4
+            elif colli in enemies_g:
+                enemy_strike_damage = colli.damage()
+                player.lose_blood(enemy_strike_damage)
 
-        # Check collision between player and enemies...
-        collided_enemies = pygame.sprite.spritecollide(player, enemies_gp, False)
-        damages = 0
-        for e in collided_enemies:
-            damages += e.get_hit_damage_value()
-            e.set_killed()
-        player.lose_blood(damages)
-
-        # Check collision between player laser and enemies...
-        for e in enemies_gp:
-            hitted_lasers = pygame.sprite.spritecollide(e, player_lasers_gp, False)
+        # Check collision between player lasers and enemies.
+        for enemy in enemies_g:
+            player_hits = pygame.sprite.spritecollide(enemy, player_lasers_g, False)
             damages = 0
-            for hit in hitted_lasers:
-                hit.set_hitted()
-                damages += hit.get_damage_value()
-            e.lose_blood(damages)
+            for hit in player_hits:
+                hit.lose_blood(1)
+                damages += hit.damage()
+                if hit.get_blood() <= 0:
+                    hit.set_killed()
+                    player_lasers_explo_args = (
+                        screen_size,
+                        IMAGES['player_lasers_shot'][0],
+                        hit.rect.center,
+                        IMAGES['player_lasers_shot'],
+                        palyer_laser_shot_size,
+                    )
+                    create_sprites(
+                        1,
+                        (explosions_g,),
+                        Explosion,
+                        *player_lasers_explo_args,
+                        lst=None
+                    )
+            enemy.lose_blood(damages)
 
         # Check collision between enemy laser and player...
-        hitted_lasers = pygame.sprite.spritecollide(player, enemy_lasers_gp, False)
+        enemy_hits = pygame.sprite.spritecollide(player, enemy_lasers_g, False)
         damages = 0
-        for hit in hitted_lasers:
-            hit.set_hitted()
-            damages += hit.get_damage_value()
+        for hit in enemy_hits:
+            hit.lose_blood(1)
+            damages += hit.damage()
+            if hit.get_blood() <= 0:
+                hit.set_killed()
+                enemy_lasers_explo_args = (
+                    screen_size,
+                    IMAGES['enemy_lasers_shot'][0],
+                    hit.rect.center,
+                    IMAGES['enemy_lasers_shot'],
+                    enemy_laser_shot_size,
+                )
+                create_sprites(
+                    1,
+                    (explosions_g,),
+                    Explosion,
+                    *enemy_lasers_explo_args,
+                    lst=None
+                )
         player.lose_blood(damages)
 
-        if player.is_protected() and protection_gp:
-            # Check collision between enemy laser and shield...
-            hitted_lasers = pygame.sprite.spritecollide(protection_gp.sprite, enemy_lasers_gp, False)
-            for hit in hitted_lasers:
-                hit.set_hitted()
+        # Check collision between enemy laser and protection shield.
+        if player.is_protected() and protection_g:
+            enemy_hits = pygame.sprite.spritecollide(protection_g.sprite, enemy_lasers_g, False)
+            for hit in enemy_hits:
+                hit.lose_blood(1)
+                if hit.get_blood() <= 0:
+                    hit.set_killed()
+                    enemy_lasers_explo_args = (
+                        screen_size,
+                        IMAGES['enemy_lasers_shot'][0],
+                        hit.rect.center,
+                        IMAGES['enemy_lasers_shot'],
+                        enemy_laser_shot_size,
+                    )
+                    create_sprites(
+                        1,
+                        (explosions_g,),
+                        Explosion,
+                        *enemy_lasers_explo_args,
+                        lst=None
+                    )
 
             # Check collision between enemies and shield...
-            collided_enemies = pygame.sprite.spritecollide(protection_gp.sprite, enemies_gp, False)
-            for e in collided_enemies:
-                e.set_killed()
+            enemies = pygame.sprite.spritecollide(protection_g.sprite, enemies_g, False)
+            for enemy in enemies:
+                enemy.lose_blood(protection_g.sprite.damage())
 
             # Counting down time limit for shielding...
-            shielding_timer -= dt
-            if shielding_timer <= 0:
+            shield_timer -= dt
+            if shield_timer <= 0:
                 player.set_protected(False)
-                protection_gp.empty()
-                shielding_timer = 4
+                protection_g.empty()
+                shield_timer = 4
 
-        # Draw player plane.
-        player_gp.update()
-        player_gp.draw(screen)
-
-        # Draw enemies.
-        # enemies_gp.update()
-        # enemies_gp.draw(screen)
-
-        first_tier_enemy_gp.update()
-        first_tier_enemy_gp.draw(screen)
-
-        second_tier_enemy_gp.update()
-        second_tier_enemy_gp.draw(screen)
-
-        # ufo_gp.update()
-        # ufo_gp.draw(screen)
-
-        # Draw lasers.
-        lasers_gp.update()
-        lasers_gp.draw(screen)
-
-        # Draw shield.
-        protection_gp.update()
-        protection_gp.draw(screen)
-
-        # Draw supplies.
-        supplies_gp.update()
-        supplies_gp.draw(screen)
-
-        # Draw blood strip.
-        temp = BLOOD_STRIP_GAP
-        for i in range(player.get_blood()):
-            pygame.draw.rect(screen,
-                             GREEN,
-                             Rect((WIDTH - BLOOD_STRIP_WIDTH - temp, 10), BLOOD_STRIP_SIZE),
-                             0)
-            temp = BLOOD_STRIP_GAP * (i + 2)
+        # Determine if player and enemy shall be explosions.
+        if player.get_blood() <= 0:
+            player.set_killed()
+            player_explo_args = (
+                screen_size,
+                IMAGES['player_explosions'][0],
+                player.rect.center,
+                IMAGES['player_explosions'],
+                None,
+            )
+            create_sprites(
+                1,
+                (explosions_g,),
+                Explosion,
+                *player_explo_args,
+                lst=None
+            )
+        for enemy in enemies_g:
+            if enemy.get_blood() <= 0:
+                enemy.set_killed()
+                enemy_explo_args = (
+                    screen_size,
+                    IMAGES['enemy_explosions'][0],
+                    enemy.rect.center,
+                    IMAGES['enemy_explosions'],
+                    None,
+                )
+                create_sprites(
+                    1,
+                    (explosions_g,),
+                    Explosion,
+                    *enemy_explo_args,
+                    lst=None
+                )
 
         # Draw score.
-        score += sum(e.get_score() for e in enemies_gp if e.is_killed())
-        draw_text(screen, str(score // 10), 18, WIDTH // 2, 10)
+        score += sum(enemy.get_score() for enemy in enemies_g if enemy.is_killed())
+        draw_text(screen, str(score), 18, width // 2, 10)
 
-        # Reset explosive group sprites.
-        explosive_gp.restore_location_before_explosion()
+        # Draw explosions.
+        explosions_g.update()
+        explosions_g.draw(screen)
 
-        lasers_gp.kill_hitted_lasers()
+        # Draw player plane.
+        players_g.update()
+        players_g.draw(screen)
 
+        # Draw enemies.
+        enemies_g.update()
+        enemies_g.draw(screen)
+
+        # Draw lasers.
+        lasers_g.update()
+        lasers_g.draw(screen)
+
+        # Draw shield.
+        protection_g.update()
+        protection_g.draw(screen)
+
+        # Draw supplies.
+        supplies_g.update()
+        supplies_g.draw(screen)
+
+        # Draw blood strip.
+        temp = blood_strip_gap
+        for i in range(player.get_blood()):
+            pygame.draw.rect(
+                screen,
+                GREEN,
+                Rect((width - blood_strip_width - temp, 10), blood_strip_size),
+                0
+            )
+            temp = blood_strip_gap * (i + 2)
+
+        # Flip.
         pygame.display.flip()
 
 

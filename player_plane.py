@@ -4,20 +4,43 @@
 
 import pygame
 from pygame.locals import *
-from weapon import Laser, Shield
+from weapon import PlayerLaser, Shield
 from plane import Plane
 
 
-class PlayerPlane(Plane):
+class Player(Plane):
     '''
     '''
 
-    def _reset_location(self):
-        ''' Overwrite this method.
-        '''
+    _fire_delay_factor = 3
+
+    def _reset(self):
+        super()._reset()
         self._protected = False
-        self.rect.left = (self._background_width - self.rect.width) // 2
-        self.rect.top = self._background_height - self.rect.height
+        self._power = self._origin_power
+        self._level = self._origin_level
+        self.rect.left = (self._screen_width - self.rect.width) // 2
+        self.rect.top = self._screen_height - self.rect.height
+
+    def _update_when_not_killed_hook(self):
+        keys_pressed = pygame.key.get_pressed()  # A list of bools of each key.
+        if keys_pressed[K_UP]:
+            self._move_up()
+        if keys_pressed[K_DOWN]:
+            self._move_down()
+        if keys_pressed[K_LEFT]:
+            self._move_left()
+        if keys_pressed[K_RIGHT]:
+            self._move_right()
+
+        if keys_pressed[K_SPACE]:
+            self._fire_process()
+
+        if self._protected:
+            self._activate_shield()
+
+    def _update_when_killed_hook(self):
+        self._reset()
 
     def _move_left(self):
         ''' Move the plane left.
@@ -30,10 +53,10 @@ class PlayerPlane(Plane):
     def _move_right(self):
         ''' Move the plane right.
         '''
-        if self.rect.right < self._background_width:
+        if self.rect.right < self._screen_width:
             self.rect.left += self._speed
         else:
-            self.rect.left = self._background_width - self.rect.width
+            self.rect.left = self._screen_width - self.rect.width
 
     def _move_up(self):
         ''' Move the plane up.
@@ -46,98 +69,74 @@ class PlayerPlane(Plane):
     def _move_down(self):
         ''' Move the plane down.
         '''
-        if self.rect.bottom < self._background_height:
+        if self.rect.bottom < self._screen_height:
             self.rect.top += self._speed
         else:
-            self.rect.top = self._background_height - self.rect.height
+            self.rect.top = self._screen_height - self.rect.height
 
-    def _fire_laser(self):
-        ''' Create Laser instance and make it available to draw.
-        '''
-        laser_speed = 15
+    def _fire(self):
         if self._power == 0:
-            laser_damage = 1
-            laser_size = (9, 30)
+            self._laser_damage = 1
+            self._laser_size = (9, 30)
         elif self._power == 1:
-            laser_damage = 2
-            laser_size = (10, 30)
+            self._laser_damage = 2
+            self._laser_size = (10, 30)
         elif self._power == 2:
-            laser_damage = 3
-            laser_size = (18, 18)
+            self._laser_damage = 3
+            self._laser_size = (18, 18)
 
         if self._level == 0:
-            positions = ['center']
+            fire_positions = ['center']
         elif self._level == 1:
-            positions = ['left', 'right']
+            fire_positions = ['left', 'right']
         elif self._level == 2:
-            positions = ['left', 'right', 'center']
+            fire_positions = ['left', 'right', 'center']
 
         for i in range(self._level + 1):
-            laser = Laser((self._background_width, self._background_height),
-                          self._lasers[self._power],
-                          self.rect,
-                          self._level,
-                          laser_speed,
-                          laser_damage,
-                          self._lasers[-1],
-                          positions[i],
-                          laser_size)
+            laser = PlayerLaser(
+                (self._screen_width, self._screen_height),
+                self._lasers[self._power],
+                self.rect,
+                self._level,
+                self._laser_speed,
+                self._laser_damage,
+                fire_positions[i],
+                self._laser_size
+            )
             for gp in self._laser_groups:
                 gp.add(laser)
 
-    def _display_shield(self):
-        shield = Shield((self._background_width, self._background_height),
-                        self._shields[0],
-                        self.rect,
-                        None)
+    def _activate_shield(self):
+        shield = Shield(
+            (self._screen_width, self._screen_height),
+            self._shields[0],
+            self.rect,
+            None
+        )
         for gp in self._shield_groups:
             gp.add(shield)
 
-    def __init__(self, background_size, image, explosion_images, lasers, laser_groups, shields, shield_groups, blood, hit_damage, models, size=None):
+    def __init__(self, screen_size, image, lasers, laser_groups, shields, shield_groups, models, size=None):
         ''' Initialize a player plane.
         '''
 
-        super().__init__(background_size, image, explosion_images, lasers, laser_groups, blood, hit_damage, size)
+        super().__init__(screen_size, image, lasers, laser_groups, size)
         self._speed = 10
-        self._fire_laser_delay = 100
+        self._blood = 10
+        self._origin_blood = self._blood
+        self._strike = 500  # Can hit any enemies except boss.
         self._power_limit = 2
         self._level_limit = 2
         self._models = [pygame.transform.smoothscale(model, size) for model in models] if size is not None else models
         self._shields = shields
         self._shield_groups = shield_groups
+        self._laser_speed = 15
+        self._laser_damage = 1
+        self._laser_size = (9, 30)
         self._protected = False
 
-        self._reset_location()
-
-    def update(self):
-        '''
-        '''
-        if self._blood <= 0:
-            self._killed = True
-
-        if self._protected:
-            self._display_shield()
-
-        if not self._killed:
-            keys_pressed = pygame.key.get_pressed()  # A list of bools of each key.
-            if keys_pressed[K_UP]:
-                self._move_up()
-            if keys_pressed[K_DOWN]:
-                self._move_down()
-            if keys_pressed[K_LEFT]:
-                self._move_left()
-            if keys_pressed[K_RIGHT]:
-                self._move_right()
-            self._trace_current_location_before_explosion()
-
-            if keys_pressed[K_SPACE]:
-                if not (self._fire_laser_delay % 3):
-                    self._fire_laser()
-                self._fire_laser_delay -= 1
-                if self._fire_laser_delay <= 0:
-                    self._fire_laser_delay = 100
-        else:
-            self._explode()
+        # Init.
+        self._reset()
 
     def is_protected(self):
         return self._protected
@@ -154,7 +153,7 @@ class PlayerPlane(Plane):
             self._level += 1
         self.image = self._models[self._level]
 
-    def blood_restore(self):
+    def blood_up(self):
         self._blood += 3
         if self._blood > self._origin_blood:
             self._blood = self._origin_blood
