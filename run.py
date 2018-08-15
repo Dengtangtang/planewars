@@ -10,7 +10,7 @@ from player_plane import Player
 from enemy_plane import ElementaryEnemy, MidEnemy, AdvancedEnemy, Meteor
 from supply import Supply
 from explosion import Explosion
-# from mygroup import ContainerGroup
+from mygroup import ContainerGroup
 
 # ------------------------- Initialize game -------------------------
 pygame.init()
@@ -195,10 +195,13 @@ def create_sprites(num, groups, cls, *args):
     for i in range(num):
         sprite = cls(*args)
         sprite.add(*groups)
+    for gp in groups:
+        if hasattr(gp, 'store_permanent'):
+            gp.store_permanent()
 
 
 def add_sprites_from_container(container, groups):
-    for sprite in container:
+    for sprite in container.iter_store():
         sprite.add(*groups)
 
 
@@ -236,14 +239,14 @@ def main():
     tt = 0  # Total time.
 
     # Create groups to control when each sprite shows up.
-    meteor_except_small_list = pygame.sprite.Group()
-    elementary_enemy_list = pygame.sprite.Group()
-    mid_enemy_list = pygame.sprite.Group()
-    advanced_enemy_list = pygame.sprite.Group()
-    star_list = pygame.sprite.Group()
-    pill_list = pygame.sprite.Group()
-    bolt_list = pygame.sprite.Group()
-    shield_list = pygame.sprite.Group()
+    meteor_except_small_list = ContainerGroup()
+    elementary_enemy_list = ContainerGroup()
+    mid_enemy_list = ContainerGroup()
+    advanced_enemy_list = ContainerGroup()
+    star_list = ContainerGroup()
+    pill_list = ContainerGroup()
+    bolt_list = ContainerGroup()
+    shield_list = ContainerGroup()
 
     # Create groups.
     all_collided_objects_g = pygame.sprite.Group()
@@ -411,7 +414,7 @@ def main():
     )
 
     # Draw entry menu.
-    run = draw_menu()
+    # run = draw_menu()
 
     while True:
         dt = clock.tick(fps) / 1000  # Delta time between current and last tick.

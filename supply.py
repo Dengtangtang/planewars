@@ -16,11 +16,11 @@ class Supply(FlyingObject):
         self.rect.top += self._speed
         if self.rect.top >= self._screen_height:
             self._reset()
-            # self.kill()
+            self.kill()
 
     def _update_when_killed_hook(self):
         self._reset()
-        # self.kill()
+        self.kill()
         # pass
 
     def __init__(self, screen_size, image, size=None):

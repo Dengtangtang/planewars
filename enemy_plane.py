@@ -21,12 +21,14 @@ class Enemy(Plane):
             self.rect.top += self._speed
         else:
             self._reset()
+            self.kill()
 
         if self.rect.top > 0:
             self._fire_process()
 
     def _update_when_killed_hook(self):
         self._reset()
+        self.kill()
 
     def _fire(self):
         for i in range(self._level + 1):
@@ -51,7 +53,7 @@ class Enemy(Plane):
 
 class ElementaryEnemy(Enemy):
 
-    _fire_delay_factor = 50
+    _fire_delay_factor = 30
 
     def __init__(self, screen_size, image, lasers, laser_groups, size=None):
         super().__init__(screen_size, image, lasers, laser_groups, size)
@@ -90,7 +92,7 @@ class MidEnemy(Enemy):
 class AdvancedEnemy(Enemy):
     ''' UFOs.
     '''
-    _fire_delay_factor = 30
+    _fire_delay_factor = 50
 
     def __init__(self, screen_size, image, lasers, laser_groups, size=None):
         super().__init__(screen_size, image, lasers, laser_groups, size)
