@@ -2,10 +2,16 @@
 '''
 
 
+import os
 import pygame
 from pygame.locals import *
 from weapon import PlayerLaser, Shield
 from plane import Plane
+
+
+pygame.mixer.init()
+laser_sound = pygame.mixer.Sound(os.path.join('sounds', 'pew.wav'))
+laser_sound.set_volume(0.2)
 
 
 class Player(Plane):
@@ -37,6 +43,7 @@ class Player(Plane):
             self._move_right()
 
         if keys_pressed[K_SPACE]:
+            laser_sound.play()
             self._fire_process()
 
         if self._protected:

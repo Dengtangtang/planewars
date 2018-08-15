@@ -11,6 +11,7 @@ from enemy_plane import ElementaryEnemy, MidEnemy, AdvancedEnemy, Meteor
 from supply import Supply
 from explosion import Explosion
 from mygroup import ContainerGroup
+from random import choice
 
 # ------------------------- Initialize game -------------------------
 pygame.init()
@@ -127,6 +128,18 @@ IMAGES = {
     ],
 }
 
+# ------------------------- Set sounds -------------------------
+menu_sound = pygame.mixer.Sound(os.path.join('sounds', 'menu.ogg'))
+main_sound = pygame.mixer.Sound(os.path.join('sounds', 'game_seamlessloop.ogg'))
+main_sound.set_volume(0.4)
+shieldup_sound = pygame.mixer.Sound(os.path.join('sounds', 'sfx_shieldUp.ogg'))
+shielddown_sound = pygame.mixer.Sound(os.path.join('sounds', 'sfx_shieldDown.ogg'))
+enemy_explo_sounds = [
+    pygame.mixer.Sound(os.path.join('sounds', 'expl3.wav')),
+    pygame.mixer.Sound(os.path.join('sounds', 'expl6.wav')),
+]
+player_explo_sound = pygame.mixer.Sound(os.path.join('sounds', 'rumble1.ogg'))
+
 # ------------------------- Set sizes -------------------------
 background_size = background_width, background_height = 600, 800
 blood_strip_size = blood_strip_width, blood_strip_height = 3, 15
@@ -159,6 +172,8 @@ def draw_text(surf, text, size, x, y):
 def draw_menu():
     global screen
 
+    menu_sound.play(-1)
+
     menu = IMAGES['menu'][0]
     menu = pygame.transform.smoothscale(menu, screen_size)
 
@@ -168,6 +183,7 @@ def draw_menu():
         event = pygame.event.poll()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
+                menu_sound.stop()
                 return True
             elif event.key == pygame.K_ESCAPE:
                 pygame.quit()
@@ -288,10 +304,6 @@ def main():
         protection_g = pygame.sprite.GroupSingle()
 
         enemies_g = pygame.sprite.Group()
-        # elementary_enemies_g = pygame.sprite.Group()
-        # mid_enemies_g = pygame.sprite.Group()
-        # advanced_enemies_g = pygame.sprite.Group()
-        # meteors_g = pygame.sprite.Group()
 
         supplies_g = pygame.sprite.Group()
         pills_g = pygame.sprite.Group()
@@ -454,6 +466,8 @@ def main():
             run = draw_menu()
             first = False
 
+        main_sound.play(-1)
+
         while run:
             dt = clock.tick(fps) / 1000  # Delta time between current and last tick.
             tt += dt
@@ -483,6 +497,7 @@ def main():
                 elif colli in pills_g:
                     player.blood_up()
                 elif colli in shields_g:
+                    shieldup_sound.play()
                     player.set_protected()
                     shield_timer = 4
                 elif colli in enemies_g:
@@ -568,10 +583,12 @@ def main():
                     player.set_protected(False)
                     protection_g.empty()
                     shield_timer = 4
+                    shielddown_sound.play()
 
             # Determine if player and enemy shall be explosions.
             if player.get_blood() <= 0:
                 player.set_killed()
+                player_explo_sound.play()
                 player.lose_lives()
                 player_explo_args = (
                     screen_size,
@@ -589,6 +606,7 @@ def main():
             for enemy in enemies_g:
                 if enemy.get_blood() <= 0:
                     enemy.set_killed()
+                    choice(enemy_explo_sounds).play()
                     enemy_explo_args = (
                         screen_size,
                         IMAGES['enemy_explosions'][0],
