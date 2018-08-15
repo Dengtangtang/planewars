@@ -7,9 +7,9 @@
 
 ## Operations
 
-'''
+```
 python3 run.py
-'''
+```
 
 - :point_up: KEY_UP
 - :point_down: KEY_DOWN
