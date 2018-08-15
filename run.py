@@ -87,6 +87,9 @@ IMAGES = {
         pygame.image.load(PLAYER_DIR + '/playerShip2_red.png').convert_alpha(),
         pygame.image.load(PLAYER_DIR + '/playerShip3_red.png').convert_alpha(),
     ],
+    'player_lifes': [
+        pygame.image.load(PLAYER_DIR + '/playerLife1_red.png').convert_alpha(),
+    ],
     'player_lasers': [
         pygame.image.load(WEAPON_DIR + '/laserRed01.png').convert_alpha(),
         pygame.image.load(WEAPON_DIR + '/laserRed09.png').convert_alpha(),
@@ -128,13 +131,14 @@ IMAGES = {
 background_size = background_width, background_height = 600, 800
 blood_strip_size = blood_strip_width, blood_strip_height = 3, 15
 blood_strip_gap = 10
+player_life_gap = 10
 player_size = (60, 45)
 elementary_enemy_size = (55, 50)
 mid_enemy_size = (55, 50)
 advanced_enemy_size = (60, 60)
 bolt_size = (20, 32)
 star_size = pill_size = shield_size = (30, 30)
-palyer_laser_shot_size = (40, 40)
+player_laser_shot_size = (40, 40)
 enemy_laser_shot_size = (20, 20)
 
 # ------------------------- Set fps -------------------------
@@ -173,8 +177,36 @@ def draw_menu():
             exit()
 
         screen.blit(menu, (0, 0))
-        draw_text(screen, "Press [ENTER] To Begin", 30, width // 2, height // 2)
-        draw_text(screen, "or [ESC] To Quit", 30, width // 2, (height // 2) + 40)
+        draw_text(screen, 'Press [ENTER] To Begin', 30, width // 2, height // 2)
+        draw_text(screen, 'or [ESC] To Quit', 30, width // 2, (height // 2) + 40)
+
+        pygame.display.flip()
+
+
+def draw_exit(score):
+    global screen
+
+    menu = IMAGES['menu'][0]
+    menu = pygame.transform.smoothscale(menu, screen_size)
+
+    while True:
+        clock.tick(fps)
+
+        event = pygame.event.poll()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                return True
+            elif event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                exit()
+        elif event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+
+        screen.blit(menu, (0, 0))
+        draw_text(screen, 'Your score: ' + str(score), 30, width // 2, height // 2)
+        draw_text(screen, 'Press [ENTER] To Retry', 30, width // 2, height // 2 + 40)
+        draw_text(screen, 'or [ESC] To Quit', 30, width // 2, (height // 2) + 40 * 2)
 
         pygame.display.flip()
 
@@ -219,286 +251,274 @@ def main():
     # Global vars.
     global screen
 
-    # Configs.
-    n_players = 1
-    n_elementary_enemies = 10
-    n_mid_enemies = 10
-    n_advanced_enemies = 10
-    n_tiny_meteors = 8
-    n_small_meteors = 8
-    n_med_meteors = 8
-    n_big_meteors = 8
-    n_stars = n_pills = n_shields = n_bolts = 1
-    score = 0
-    shield_timer = 5  # The time limit for shielding is 4 seconds.
-    tt = 0  # Total time.
+    run = True
+    first = True
 
-    # Create groups to control when each sprite shows up.
-    meteor_small_list = ContainerGroup()
-    meteor_except_small_list = ContainerGroup()
-    elementary_enemy_list = ContainerGroup()
-    mid_enemy_list = ContainerGroup()
-    advanced_enemy_list = ContainerGroup()
-    star_list = ContainerGroup()
-    pill_list = ContainerGroup()
-    bolt_list = ContainerGroup()
-    shield_list = ContainerGroup()
+    while run:
 
-    # Create groups.
-    all_collided_objects_g = pygame.sprite.Group()
+        # Configs.
+        n_players = 1
+        n_elementary_enemies = 10
+        n_mid_enemies = 10
+        n_advanced_enemies = 10
+        n_tiny_meteors = 8
+        n_small_meteors = 8
+        n_med_meteors = 8
+        n_big_meteors = 8
+        n_stars = n_pills = n_shields = n_bolts = 1
+        score = 0
+        shield_timer = 4  # The time limit for shielding is 4 seconds.
+        tt = 0  # Total time.
 
-    players_g = pygame.sprite.GroupSingle()
-    protection_g = pygame.sprite.GroupSingle()
+        # Create groups to control when each sprite shows up.
+        meteor_small_list = ContainerGroup()
+        meteor_except_small_list = ContainerGroup()
+        elementary_enemy_list = ContainerGroup()
+        mid_enemy_list = ContainerGroup()
+        advanced_enemy_list = ContainerGroup()
+        star_list = ContainerGroup()
+        pill_list = ContainerGroup()
+        bolt_list = ContainerGroup()
+        shield_list = ContainerGroup()
 
-    enemies_g = pygame.sprite.Group()
-    # elementary_enemies_g = pygame.sprite.Group()
-    # mid_enemies_g = pygame.sprite.Group()
-    # advanced_enemies_g = pygame.sprite.Group()
-    # meteors_g = pygame.sprite.Group()
+        # Create groups.
+        all_collided_objects_g = pygame.sprite.Group()
 
-    supplies_g = pygame.sprite.Group()
-    pills_g = pygame.sprite.Group()
-    stars_g = pygame.sprite.Group()
-    shields_g = pygame.sprite.Group()
-    bolts_g = pygame.sprite.Group()
+        players_g = pygame.sprite.GroupSingle()
+        protection_g = pygame.sprite.GroupSingle()
 
-    lasers_g = pygame.sprite.Group()
-    player_lasers_g = pygame.sprite.Group()
-    enemy_lasers_g = pygame.sprite.Group()
+        enemies_g = pygame.sprite.Group()
+        # elementary_enemies_g = pygame.sprite.Group()
+        # mid_enemies_g = pygame.sprite.Group()
+        # advanced_enemies_g = pygame.sprite.Group()
+        # meteors_g = pygame.sprite.Group()
 
-    explosions_g = pygame.sprite.Group()
+        supplies_g = pygame.sprite.Group()
+        pills_g = pygame.sprite.Group()
+        stars_g = pygame.sprite.Group()
+        shields_g = pygame.sprite.Group()
+        bolts_g = pygame.sprite.Group()
 
-    # Create background 'Surface'.
-    background_y = 0
-    background = pygame.transform.smoothscale(IMAGES['backgrounds'][0], background_size)
+        lasers_g = pygame.sprite.Group()
+        player_lasers_g = pygame.sprite.Group()
+        enemy_lasers_g = pygame.sprite.Group()
 
-    # Create player.
-    player_args = (
-        screen_size,
-        IMAGES['players'][0],
-        IMAGES['player_lasers'],
-        (player_lasers_g, lasers_g),
-        IMAGES['protections'],
-        (protection_g,),
-        IMAGES['players'],
-        player_size,
-    )
-    create_sprites(n_players, (players_g,), Player, *player_args)
-    player = players_g.sprite
+        explosions_g = pygame.sprite.Group()
 
-    # Create enemies.
-    elementary_enemy_args = (
-        screen_size,
-        IMAGES['elementary_enemies'][0],
-        IMAGES['elementary_enemy_lasers'],
-        (enemy_lasers_g, lasers_g),
-        elementary_enemy_size,
-    )
-    mid_enemy_args = (
-        screen_size,
-        IMAGES['mid_enemies'][0],
-        IMAGES['mid_enemy_lasers'],
-        (enemy_lasers_g, lasers_g),
-        mid_enemy_size,
-    )
-    advanced_enemy_args = (
-        screen_size,
-        IMAGES['advanced_enemies'][0],
-        IMAGES['advanced_enemy_lasers'],
-        (enemy_lasers_g, lasers_g),
-        advanced_enemy_size,
-    )
-    tiny_meteor_args = (
-        screen_size,
-        IMAGES['tiny_meteors'][0],
-        [],
-        (),
-        None,
-    )
-    small_meteor_args = (
-        screen_size,
-        IMAGES['small_meteors'][0],
-        [],
-        (),
-        None,
-    )
-    med_meteor_args = (
-        screen_size,
-        IMAGES['med_meteors'][0],
-        [],
-        (),
-        None,
-    )
-    big_meteor_args = (
-        screen_size,
-        IMAGES['big_meteors'][0],
-        [],
-        (),
-        None,
-    )
-    create_sprites(
-        n_elementary_enemies,
-        (elementary_enemy_list,),
-        ElementaryEnemy,
-        *elementary_enemy_args,
-    )
-    create_sprites(
-        n_mid_enemies,
-        (mid_enemy_list,),
-        MidEnemy,
-        *mid_enemy_args,
-    )
-    create_sprites(
-        n_advanced_enemies,
-        (advanced_enemy_list,),
-        AdvancedEnemy,
-        *advanced_enemy_args,
-    )
-    create_sprites(
-        n_tiny_meteors,
-        (meteor_except_small_list,),
-        Meteor,
-        *tiny_meteor_args,
-    )
-    create_sprites(
-        n_small_meteors,
-        (meteor_small_list,),
-        Meteor,
-        *small_meteor_args,
-    )
-    create_sprites(
-        n_med_meteors,
-        (meteor_except_small_list,),
-        Meteor,
-        *med_meteor_args,
-    )
-    create_sprites(
-        n_big_meteors,
-        (meteor_except_small_list,),
-        Meteor,
-        *big_meteor_args,
-    )
+        # Create background 'Surface'.
+        background_y = 0
+        background = pygame.transform.smoothscale(IMAGES['backgrounds'][0], background_size)
 
-    # Create supplies.
-    star_args = (screen_size, IMAGES['stars'][0], star_size)
-    bolt_args = (screen_size, IMAGES['powerups'][0], bolt_size)
-    shield_args = (screen_size, IMAGES['shields'][0], shield_size)
-    pill_args = (screen_size, IMAGES['pills'][0], pill_size)
-    create_sprites(
-        n_stars,
-        (star_list,),
-        Supply,
-        *star_args,
-    )
-    create_sprites(
-        n_bolts,
-        (bolt_list,),
-        Supply,
-        *bolt_args,
-    )
-    create_sprites(
-        n_shields,
-        (shield_list,),
-        Supply,
-        *shield_args,
-    )
-    create_sprites(
-        n_pills,
-        (pill_list,),
-        Supply,
-        *pill_args,
-    )
+        # Create player life 'Surface'.
+        player_life = IMAGES['player_lifes'][0]
 
-    # Draw entry menu.
-    # run = draw_menu()
+        # Create player.
+        player_args = (
+            screen_size,
+            IMAGES['players'][0],
+            IMAGES['player_lasers'],
+            (player_lasers_g, lasers_g),
+            IMAGES['protections'],
+            (protection_g,),
+            IMAGES['players'],
+            player_size,
+        )
+        create_sprites(n_players, (players_g,), Player, *player_args)
+        player = players_g.sprite
 
-    while True:
-        dt = clock.tick(fps) / 1000  # Delta time between current and last tick.
-        tt += dt
-        # print(tt)
+        # Create enemies.
+        elementary_enemy_args = (
+            screen_size,
+            IMAGES['elementary_enemies'][0],
+            IMAGES['elementary_enemy_lasers'],
+            (enemy_lasers_g, lasers_g),
+            elementary_enemy_size,
+        )
+        mid_enemy_args = (
+            screen_size,
+            IMAGES['mid_enemies'][0],
+            IMAGES['mid_enemy_lasers'],
+            (enemy_lasers_g, lasers_g),
+            mid_enemy_size,
+        )
+        advanced_enemy_args = (
+            screen_size,
+            IMAGES['advanced_enemies'][0],
+            IMAGES['advanced_enemy_lasers'],
+            (enemy_lasers_g, lasers_g),
+            advanced_enemy_size,
+        )
+        tiny_meteor_args = (
+            screen_size,
+            IMAGES['tiny_meteors'][0],
+            [],
+            (),
+            None,
+        )
+        small_meteor_args = (
+            screen_size,
+            IMAGES['small_meteors'][0],
+            [],
+            (),
+            None,
+        )
+        med_meteor_args = (
+            screen_size,
+            IMAGES['med_meteors'][0],
+            [],
+            (),
+            None,
+        )
+        big_meteor_args = (
+            screen_size,
+            IMAGES['big_meteors'][0],
+            [],
+            (),
+            None,
+        )
+        create_sprites(
+            n_elementary_enemies,
+            (elementary_enemy_list,),
+            ElementaryEnemy,
+            *elementary_enemy_args,
+        )
+        create_sprites(
+            n_mid_enemies,
+            (mid_enemy_list,),
+            MidEnemy,
+            *mid_enemy_args,
+        )
+        create_sprites(
+            n_advanced_enemies,
+            (advanced_enemy_list,),
+            AdvancedEnemy,
+            *advanced_enemy_args,
+        )
+        create_sprites(
+            n_tiny_meteors,
+            (meteor_except_small_list,),
+            Meteor,
+            *tiny_meteor_args,
+        )
+        create_sprites(
+            n_small_meteors,
+            (meteor_small_list,),
+            Meteor,
+            *small_meteor_args,
+        )
+        create_sprites(
+            n_med_meteors,
+            (meteor_except_small_list,),
+            Meteor,
+            *med_meteor_args,
+        )
+        create_sprites(
+            n_big_meteors,
+            (meteor_except_small_list,),
+            Meteor,
+            *big_meteor_args,
+        )
 
-        for event in pygame.event.get():
-            if event.type == QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                pygame.quit()
-                sys.exit()
+        # Create supplies.
+        star_args = (screen_size, IMAGES['stars'][0], star_size)
+        bolt_args = (screen_size, IMAGES['powerups'][0], bolt_size)
+        shield_args = (screen_size, IMAGES['shields'][0], shield_size)
+        pill_args = (screen_size, IMAGES['pills'][0], pill_size)
+        create_sprites(
+            n_stars,
+            (star_list,),
+            Supply,
+            *star_args,
+        )
+        create_sprites(
+            n_bolts,
+            (bolt_list,),
+            Supply,
+            *bolt_args,
+        )
+        create_sprites(
+            n_shields,
+            (shield_list,),
+            Supply,
+            *shield_args,
+        )
+        create_sprites(
+            n_pills,
+            (pill_list,),
+            Supply,
+            *pill_args,
+        )
 
-        # Draw moving background.
-        background_y = draw_backgrounds(background, background_y)
+        # Draw entry menu.
+        if first:
+            run = draw_menu()
+            first = False
 
-        # Check collision.
-        # Check collision between player and other objects.
-        collides = pygame.sprite.spritecollide(player, all_collided_objects_g, False)
-        player_strike_damage = player.damage()
-        for colli in collides:
-            colli.lose_blood(player_strike_damage)
-            if colli.get_blood() <= 0:
-                colli.set_killed()
+        while run:
+            dt = clock.tick(fps) / 1000  # Delta time between current and last tick.
+            tt += dt
+            # print(tt)
 
-            if colli in bolts_g:
-                player.power_up()
-            elif colli in stars_g:
-                player.level_up()
-            elif colli in pills_g:
-                player.blood_up()
-            elif colli in shields_g:
-                player.set_protected()
-                shield_timer = 4
-            elif colli in enemies_g:
-                enemy_strike_damage = colli.damage()
-                player.lose_blood(enemy_strike_damage)
+            for event in pygame.event.get():
+                if event.type == QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                    pygame.quit()
+                    sys.exit()
 
-        # Check collision between player lasers and enemies.
-        for enemy in enemies_g:
-            player_hits = pygame.sprite.spritecollide(enemy, player_lasers_g, False)
+            # Draw moving background.
+            background_y = draw_backgrounds(background, background_y)
+
+            # Check collision.
+            # Check collision between player and other objects.
+            collides = pygame.sprite.spritecollide(player, all_collided_objects_g, False)
+            player_strike_damage = player.damage()
+            for colli in collides:
+                colli.lose_blood(player_strike_damage)
+                if colli.get_blood() <= 0:
+                    colli.set_killed()
+
+                if colli in bolts_g:
+                    player.power_up()
+                elif colli in stars_g:
+                    player.level_up()
+                elif colli in pills_g:
+                    player.blood_up()
+                elif colli in shields_g:
+                    player.set_protected()
+                    shield_timer = 4
+                elif colli in enemies_g:
+                    enemy_strike_damage = colli.damage()
+                    player.lose_blood(enemy_strike_damage)
+
+            # Check collision between player lasers and enemies.
+            for enemy in enemies_g:
+                player_hits = pygame.sprite.spritecollide(enemy, player_lasers_g, False)
+                damages = 0
+                for hit in player_hits:
+                    hit.lose_blood(1)
+                    damages += hit.damage()
+                    if hit.get_blood() <= 0:
+                        hit.set_killed()
+                        player_lasers_explo_args = (
+                            screen_size,
+                            IMAGES['player_lasers_shot'][0],
+                            hit.rect.center,
+                            IMAGES['player_lasers_shot'],
+                            player_laser_shot_size,
+                        )
+                        create_sprites(
+                            1,
+                            (explosions_g,),
+                            Explosion,
+                            *player_lasers_explo_args,
+                        )
+                enemy.lose_blood(damages)
+
+            # Check collision between enemy laser and player...
+            enemy_hits = pygame.sprite.spritecollide(player, enemy_lasers_g, False)
             damages = 0
-            for hit in player_hits:
-                hit.lose_blood(1)
-                damages += hit.damage()
-                if hit.get_blood() <= 0:
-                    hit.set_killed()
-                    player_lasers_explo_args = (
-                        screen_size,
-                        IMAGES['player_lasers_shot'][0],
-                        hit.rect.center,
-                        IMAGES['player_lasers_shot'],
-                        palyer_laser_shot_size,
-                    )
-                    create_sprites(
-                        1,
-                        (explosions_g,),
-                        Explosion,
-                        *player_lasers_explo_args,
-                    )
-            enemy.lose_blood(damages)
-
-        # Check collision between enemy laser and player...
-        enemy_hits = pygame.sprite.spritecollide(player, enemy_lasers_g, False)
-        damages = 0
-        for hit in enemy_hits:
-            hit.lose_blood(1)
-            damages += hit.damage()
-            if hit.get_blood() <= 0:
-                hit.set_killed()
-                enemy_lasers_explo_args = (
-                    screen_size,
-                    IMAGES['enemy_lasers_shot'][0],
-                    hit.rect.center,
-                    IMAGES['enemy_lasers_shot'],
-                    enemy_laser_shot_size,
-                )
-                create_sprites(
-                    1,
-                    (explosions_g,),
-                    Explosion,
-                    *enemy_lasers_explo_args,
-                )
-        player.lose_blood(damages)
-
-        # Check collision between enemy laser and protection shield.
-        if player.is_protected() and protection_g:
-            enemy_hits = pygame.sprite.spritecollide(protection_g.sprite, enemy_lasers_g, False)
             for hit in enemy_hits:
                 hit.lose_blood(1)
+                damages += hit.damage()
                 if hit.get_blood() <= 0:
                     hit.set_killed()
                     enemy_lasers_explo_args = (
@@ -514,159 +534,196 @@ def main():
                         Explosion,
                         *enemy_lasers_explo_args,
                     )
+            player.lose_blood(damages)
 
-            # Check collision between enemies and shield...
-            enemies = pygame.sprite.spritecollide(protection_g.sprite, enemies_g, False)
-            for enemy in enemies:
-                enemy.lose_blood(protection_g.sprite.damage())
+            # Check collision between enemy laser and protection shield.
+            if player.is_protected() and protection_g:
+                enemy_hits = pygame.sprite.spritecollide(protection_g.sprite, enemy_lasers_g, False)
+                for hit in enemy_hits:
+                    hit.lose_blood(1)
+                    if hit.get_blood() <= 0:
+                        hit.set_killed()
+                        enemy_lasers_explo_args = (
+                            screen_size,
+                            IMAGES['enemy_lasers_shot'][0],
+                            hit.rect.center,
+                            IMAGES['enemy_lasers_shot'],
+                            enemy_laser_shot_size,
+                        )
+                        create_sprites(
+                            1,
+                            (explosions_g,),
+                            Explosion,
+                            *enemy_lasers_explo_args,
+                        )
 
-            # Counting down time limit for shielding.
-            shield_timer -= dt
-            if shield_timer <= 0:
-                player.set_protected(False)
-                protection_g.empty()
-                shield_timer = 4
+                # Check collision between enemies and shield...
+                enemies = pygame.sprite.spritecollide(protection_g.sprite, enemies_g, False)
+                for enemy in enemies:
+                    enemy.lose_blood(protection_g.sprite.damage())
 
-        # Determine if player and enemy shall be explosions.
-        if player.get_blood() <= 0:
-            player.set_killed()
-            player_explo_args = (
-                screen_size,
-                IMAGES['player_explosions'][0],
-                player.rect.center,
-                IMAGES['player_explosions'],
-                None,
-            )
-            create_sprites(
-                1,
-                (explosions_g,),
-                Explosion,
-                *player_explo_args,
-            )
-        for enemy in enemies_g:
-            if enemy.get_blood() <= 0:
-                enemy.set_killed()
-                enemy_explo_args = (
+                # Counting down time limit for shielding.
+                shield_timer -= dt
+                if shield_timer <= 0:
+                    player.set_protected(False)
+                    protection_g.empty()
+                    shield_timer = 4
+
+            # Determine if player and enemy shall be explosions.
+            if player.get_blood() <= 0:
+                player.set_killed()
+                player.lose_lives()
+                player_explo_args = (
                     screen_size,
-                    IMAGES['enemy_explosions'][0],
-                    enemy.rect.center,
-                    IMAGES['enemy_explosions'],
+                    IMAGES['player_explosions'][0],
+                    player.rect.center,
+                    IMAGES['player_explosions'],
                     None,
                 )
                 create_sprites(
                     1,
                     (explosions_g,),
                     Explosion,
-                    *enemy_explo_args,
+                    *player_explo_args,
                 )
+            for enemy in enemies_g:
+                if enemy.get_blood() <= 0:
+                    enemy.set_killed()
+                    enemy_explo_args = (
+                        screen_size,
+                        IMAGES['enemy_explosions'][0],
+                        enemy.rect.center,
+                        IMAGES['enemy_explosions'],
+                        None,
+                    )
+                    create_sprites(
+                        1,
+                        (explosions_g,),
+                        Explosion,
+                        *enemy_explo_args,
+                    )
 
-        # Draw score.
-        score += sum(enemy.get_score() for enemy in enemies_g if enemy.is_killed())
-        draw_text(screen, str(score), 18, width // 2, 10)
+            # Draw score.
+            score += sum(enemy.get_score() for enemy in enemies_g if enemy.is_killed())
+            draw_text(screen, str(score), 18, width // 2, 10)
 
-        # Control game sprites appearance.
-        # We shall place HERE before sprites gets update!
-        manage_sprites_with_time(
-            tt,
-            (3,),
-            (30,),
-            elementary_enemy_list,
-            [enemies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (30,),
-            (60,),
-            mid_enemy_list,
-            [enemies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (60,),
-            (75,),
-            meteor_except_small_list,
-            [enemies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (75,),
-            (100,),
-            advanced_enemy_list,
-            [enemies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (7, 32, 70),
-            (8, 33, 71),
-            star_list,
-            [stars_g, supplies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (7, 43, 65),
-            (8, 44, 66),
-            bolt_list,
-            [bolts_g, supplies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (25, 85),
-            (26, 86),
-            pill_list,
-            [pills_g, supplies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (58, 79),
-            (59, 80),
-            shield_list,
-            [shields_g, supplies_g, all_collided_objects_g]
-        )
-        manage_sprites_with_time(
-            tt,
-            (0,),
-            (105,),
-            meteor_small_list,
-            [enemies_g, all_collided_objects_g]
-        )
-
-        # Draw explosions.
-        explosions_g.update()
-        explosions_g.draw(screen)
-
-        # Draw player plane.
-        players_g.update()
-        players_g.draw(screen)
-
-        # Draw enemies.
-        enemies_g.update()
-        enemies_g.draw(screen)
-
-        # Draw lasers.
-        lasers_g.update()
-        lasers_g.draw(screen)
-
-        # Draw shield.
-        protection_g.update()
-        protection_g.draw(screen)
-
-        # Draw supplies.
-        supplies_g.update()
-        supplies_g.draw(screen)
-
-        # Draw blood strip.
-        temp = blood_strip_gap
-        for i in range(player.get_blood()):
-            pygame.draw.rect(
-                screen,
-                GREEN,
-                Rect((width - blood_strip_width - temp, 10), blood_strip_size),
-                0
+            # Control game sprites appearance.
+            # We shall place HERE before sprites gets update!
+            manage_sprites_with_time(
+                tt,
+                (3,),
+                (30,),
+                elementary_enemy_list,
+                [enemies_g, all_collided_objects_g]
             )
-            temp = blood_strip_gap * (i + 2)
+            manage_sprites_with_time(
+                tt,
+                (30,),
+                (60,),
+                mid_enemy_list,
+                [enemies_g, all_collided_objects_g]
+            )
+            manage_sprites_with_time(
+                tt,
+                (60,),
+                (75,),
+                meteor_except_small_list,
+                [enemies_g, all_collided_objects_g]
+            )
+            manage_sprites_with_time(
+                tt,
+                (75,),
+                (100,),
+                advanced_enemy_list,
+                [enemies_g, all_collided_objects_g]
+            )
+            manage_sprites_with_time(
+                tt,
+                (7, 32, 70),
+                (8, 33, 71),
+                star_list,
+                [stars_g, supplies_g, all_collided_objects_g]
+            )
+            manage_sprites_with_time(
+                tt,
+                (7, 43, 65),
+                (8, 44, 66),
+                bolt_list,
+                [bolts_g, supplies_g, all_collided_objects_g]
+            )
+            manage_sprites_with_time(
+                tt,
+                (25, 85),
+                (26, 86),
+                pill_list,
+                [pills_g, supplies_g, all_collided_objects_g]
+            )
+            manage_sprites_with_time(
+                tt,
+                (58, 79),
+                (59, 80),
+                shield_list,
+                [shields_g, supplies_g, all_collided_objects_g]
+            )
+            manage_sprites_with_time(
+                tt,
+                (0,),
+                (105,),
+                meteor_small_list,
+                [enemies_g, all_collided_objects_g]
+            )
 
-        # Flip.
-        pygame.display.flip()
+            # Draw explosions.
+            explosions_g.update()
+            explosions_g.draw(screen)
+
+            # Draw player plane.
+            players_g.update()
+            players_g.draw(screen)
+
+            # Draw enemies.
+            enemies_g.update()
+            enemies_g.draw(screen)
+
+            # Draw lasers.
+            lasers_g.update()
+            lasers_g.draw(screen)
+
+            # Draw shield.
+            protection_g.update()
+            protection_g.draw(screen)
+
+            # Draw supplies.
+            supplies_g.update()
+            supplies_g.draw(screen)
+
+            # Draw blood strip.
+            temp = blood_strip_gap
+            for i in range(player.get_blood()):
+                pygame.draw.rect(
+                    screen,
+                    GREEN,
+                    Rect((width - blood_strip_width - temp, 10), blood_strip_size),
+                    0
+                )
+                temp = blood_strip_gap * (i + 2)
+
+            # Draw player life.
+            temp = player_life_gap
+            for i in range(player.get_lives()):
+                screen.blit(player_life, (width - player_life.get_rect().width - temp, 15 + blood_strip_height))
+                temp = player_life_gap * (i + 5)
+
+            # Flip.
+            pygame.display.flip()
+
+            # Determine how many lives left.
+            if player.get_lives() < 0:
+                run = False
+
+        # Draw entry menu.
+        # Retry?
+        run = draw_exit(score)
 
 
 if __name__ == '__main__':

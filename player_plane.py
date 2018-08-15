@@ -16,11 +16,14 @@ class Player(Plane):
 
     def _reset(self):
         super()._reset()
-        self._protected = False
+        # self._protected = False
         self._power = self._origin_power
         self._level = self._origin_level
         self.rect.left = (self._screen_width - self.rect.width) // 2
         self.rect.top = self._screen_height - self.rect.height
+
+        self._protected = True
+        self._activate_shield()
 
     def _update_when_not_killed_hook(self):
         keys_pressed = pygame.key.get_pressed()  # A list of bools of each key.
@@ -134,6 +137,7 @@ class Player(Plane):
         self._laser_damage = 1
         self._laser_size = (9, 30)
         self._protected = False
+        self._lives = 2
 
         # Init.
         self._reset()
@@ -158,3 +162,9 @@ class Player(Plane):
         self._blood += 3
         if self._blood > self._origin_blood:
             self._blood = self._origin_blood
+
+    def get_lives(self):
+        return self._lives
+
+    def lose_lives(self, v=1):
+        self._lives -= v
