@@ -212,11 +212,6 @@ def manage_sprites_with_time(tt, starts, ends, container, groups):
                 container,
                 groups
             )
-        else:
-            for g in groups:
-                for sp in g:
-                    if sp in container and (sp.rect.top >= height or sp.is_killed()):
-                        g.remove(sp)
 
 
 def main():
@@ -239,6 +234,7 @@ def main():
     tt = 0  # Total time.
 
     # Create groups to control when each sprite shows up.
+    meteor_small_list = ContainerGroup()
     meteor_except_small_list = ContainerGroup()
     elementary_enemy_list = ContainerGroup()
     mid_enemy_list = ContainerGroup()
@@ -366,7 +362,7 @@ def main():
     )
     create_sprites(
         n_small_meteors,
-        (enemies_g, all_collided_objects_g),
+        (meteor_small_list,),
         Meteor,
         *small_meteor_args,
     )
@@ -625,6 +621,13 @@ def main():
             (59, 80),
             shield_list,
             [shields_g, supplies_g, all_collided_objects_g]
+        )
+        manage_sprites_with_time(
+            tt,
+            (0,),
+            (105,),
+            meteor_small_list,
+            [enemies_g, all_collided_objects_g]
         )
 
         # Draw explosions.
