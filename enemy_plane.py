@@ -134,6 +134,7 @@ class Meteor(Enemy):
 
         if self.rect.top >= self._screen_height:
             self._reset()
+            self.kill()
         else:
             self.rect.top += self._speedy
             self.rect.left += self._speedx
