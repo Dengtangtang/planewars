@@ -15,7 +15,9 @@ from random import choice
 
 # ------------------------- Initialize game -------------------------
 pygame.init()
-screen_size = width, height = 600, 800  # Screen size.
+width = 600
+height = 800 if pygame.display.Info().current_h >= 900 else pygame.display.Info().current_h - 100
+screen_size = width, height  # Screen size.
 screen = pygame.display.set_mode(screen_size)  # Screen.
 pygame.display.set_caption('Plane War Demo')  # Caption.
 clock = pygame.time.Clock()  # Clock.
@@ -141,7 +143,7 @@ enemy_explo_sounds = [
 player_explo_sound = pygame.mixer.Sound(os.path.join('sounds', 'rumble1.ogg'))
 
 # ------------------------- Set sizes -------------------------
-background_size = background_width, background_height = 600, 800
+background_size = background_width, background_height = width, height
 blood_strip_size = blood_strip_width, blood_strip_height = 3, 15
 blood_strip_gap = 10
 player_life_gap = 10
