@@ -1,5 +1,6 @@
 # Plane wars (飞机大战)
 **ps.** As i am a bit lazy (SORRY! T_T), the default window size is 600 x 800; i think 768 height monitor can also have a not bad feel in the game, but lower than that...XDDDD
+
 **pps.** i have not designed the boss for the moment, XDDD
 
 ## Built With
