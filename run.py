@@ -157,7 +157,7 @@ player_laser_shot_size = (40, 40)
 enemy_laser_shot_size = (20, 20)
 
 # ------------------------- Set fps -------------------------
-fps = 60
+fps = 30
 
 # ------------------------- Set font -------------------------
 font_file = pygame.font.match_font('arial')
@@ -476,7 +476,7 @@ def main():
             # print(tt)
 
             for event in pygame.event.get():
-                if event.type == QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                     pygame.quit()
                     sys.exit()
 
